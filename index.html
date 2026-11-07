@@ -11,71 +11,82 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
 <style>
   :root {
-    --bg1: #fff4d6; --bg2: #ffe0ec; --panel: #ffffff; --ink: #2b2d42; --muted: #8a8fa3; --line: #f0e6da;
-    --accent: #5b6cff; --accent-soft: #eef0ff; --good: #20b26b; --good-soft: #e3f8ec;
-    --warn: #ff9f1c; --bad: #ff4d6d; --draw: #ffb703; --draw-soft: #fff4d1;
-    --shadow: 0 6px 18px rgba(80, 60, 30, .10); --radius: 18px;
+    --ink: #3b3355; --muted: #8b84a3; --paper: #ffffff; --bg: #fff6dc; --line: #ece4d3;
+    --yellow: #ffd84d; --yellow-soft: #fff4c2; --pink: #ff9ec4; --pink-soft: #ffe3ef; --mint: #8fe3c8; --mint-soft: #ddf8ee;
+    --sky: #9cc9ff; --sky-soft: #e3f0ff; --lav: #c4b2ff; --lav-soft: #efe9ff;
+    --accent: #7b61ff; --good: #22b573; --bad: #ff5c7a; --warn: #ffa63d;
+    --radius: 22px; --pop: 4px 4px 0 var(--ink);
     --display: "Jua", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; min-height: 100%; }
-  body { background: linear-gradient(135deg, var(--bg1), var(--bg2)); background-attachment: fixed; color: var(--ink);
+  body { color: var(--ink); background-color: var(--bg);
+    background-image: radial-gradient(#ffd9a0 1.6px, transparent 1.8px); background-size: 24px 24px;
     font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; }
-  button { font: inherit; cursor: pointer; border: 2px solid var(--line); background: var(--panel); color: var(--ink);
-    border-radius: 14px; padding: 9px 16px; transition: transform .1s, box-shadow .1s, background .15s; }
-  button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,.08); }
-  button:active:not(:disabled) { transform: translateY(1px); }
-  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-family: var(--display); font-size: 18px; box-shadow: 0 4px 0 #3e4bd1; }
-  button.primary:active:not(:disabled) { box-shadow: 0 1px 0 #3e4bd1; transform: translateY(3px); }
-  button:disabled { opacity: .45; cursor: not-allowed; }
-  input, select { font: inherit; padding: 10px 12px; border: 2px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); outline: none; }
-  input:focus, select:focus { border-color: var(--accent); }
-  .hidden { display: none !important; }
-  .card { background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow); }
-  .banner { background: #fff; border-bottom: 2px dashed #ffd27a; padding: 6px 16px; font-size: 13px; text-align: center; color: #9a6b00; }
   h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; }
+  .hidden { display: none !important; }
+  .off { visibility: hidden; }
+
+  /* 버튼: 스티커처럼 테두리 + 그림자, 누르면 쏙 들어감 */
+  button { font: inherit; color: var(--ink); cursor: pointer; background: var(--paper); border: 3px solid var(--ink);
+    border-radius: 16px; padding: 8px 16px; box-shadow: 3px 3px 0 var(--ink); transition: transform .08s, box-shadow .08s, background .15s; }
+  button:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+  button:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.primary { background: var(--yellow); font-family: var(--display); font-size: 19px; }
+  button.pink { background: var(--pink); font-family: var(--display); font-size: 19px; }
+  input, select { font: inherit; color: var(--ink); padding: 11px 14px; border: 3px solid var(--ink); border-radius: 14px; background: #fff; outline: none; }
+  input:focus, select:focus { background: var(--yellow-soft); }
+  .card { background: var(--paper); border: 3px solid var(--ink); border-radius: var(--radius); box-shadow: var(--pop); }
+  .banner { background: var(--yellow-soft); border-bottom: 3px solid var(--ink); padding: 6px 16px; font-size: 13px; text-align: center; }
 
   /* ---------- 입장 화면 ---------- */
-  #join { max-width: 420px; margin: 56px auto; padding: 32px 28px; }
-  #join .logo { font-size: 54px; text-align: center; }
-  #join h1 { font-size: 40px; text-align: center; color: var(--accent); }
-  #join .sub { color: var(--muted); margin: 6px 0 22px; text-align: center; }
-  #join .sub.err { color: var(--bad); }
-  #join label { display: block; font-size: 14px; color: var(--muted); margin: 14px 0 6px; font-weight: 600; }
+  #join { max-width: 440px; margin: 48px auto; padding: 30px 30px 28px; position: relative; }
+  #join .logo { text-align: center; font-size: 46px; line-height: 1; }
+  #join h1 { font-size: 46px; text-align: center; margin-top: 6px; letter-spacing: 1px; }
+  #join h1 span { display: inline-block; -webkit-text-stroke: 1.5px var(--ink); paint-order: stroke fill; }
+  #join h1 span:nth-child(odd) { transform: rotate(-4deg); } #join h1 span:nth-child(even) { transform: rotate(4deg) translateY(2px); }
+  #join .sub { color: var(--muted); margin: 10px 0 20px; text-align: center; font-size: 15px; }
+  #join .sub.err { color: var(--bad); font-weight: 700; }
+  #join label { display: block; font-family: var(--display); font-size: 17px; margin: 14px 0 6px; }
   #join input { width: 100%; }
-  #join .joinhelp { font-size: 12px; color: var(--muted); margin: 6px 0 0; line-height: 1.5; }
-  #join .row { display: flex; gap: 10px; margin-top: 22px; }
-  #join .row > * { flex: 1; }
-  #join .row button:not(.primary) { font-family: var(--display); font-size: 18px; }
+  #join .joinhelp { font-size: 12px; color: var(--muted); margin: 8px 0 0; line-height: 1.5; }
+  #join .row { display: flex; gap: 12px; margin-top: 24px; }
+  #join .row > * { flex: 1; padding: 12px; font-family: var(--display); font-size: 20px; }
+  #join .deco { position: absolute; font-size: 30px; }
 
   /* ---------- 게임 화면 ---------- */
-  #game { max-width: 1280px; margin: 0 auto; padding: 14px 16px 24px; }
-  .topbar { display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; padding: 12px 18px; }
-  .roombox { display: flex; align-items: center; gap: 10px; }
-  .roomchip { font-family: var(--display); font-size: 20px; background: var(--accent-soft); color: var(--accent); padding: 6px 14px; border-radius: 999px; }
-  .copy { font-size: 13px; padding: 6px 12px; }
-  .center { text-align: center; min-width: 0; }
-  .qinfo { font-family: var(--display); font-size: 18px; color: var(--muted); }
-  .qinfo b { color: var(--ink); font-weight: 400; font-size: 22px; }
-  .progress { display: flex; gap: 3px; justify-content: center; margin-top: 6px; }
-  .progress i { width: 18px; height: 7px; border-radius: 4px; background: #eee5d8; }
-  .progress i.done { background: var(--accent); }
-  .progress i.now { background: var(--draw); animation: blink 1s infinite; }
+  #game { max-width: 1280px; margin: 0 auto; padding: 16px 16px 28px; }
+  .topbar { display: grid; grid-template-columns: 230px 1fr 230px; gap: 12px; align-items: center; padding: 12px 18px; }
+  .roombox { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+  .roomchip { font-family: var(--display); font-size: 20px; background: var(--lav-soft); border: 3px solid var(--ink); padding: 4px 14px; border-radius: 999px; }
+  .copy { font-size: 13px; padding: 5px 12px; box-shadow: 2px 2px 0 var(--ink); }
+  .center { text-align: center; min-width: 0; display: grid; grid-template-rows: 28px 12px 28px 28px 46px; align-items: center; justify-items: center; }
+  .qinfo { font-family: var(--display); font-size: 19px; color: var(--muted); }
+  .qinfo b { color: var(--ink); font-weight: 400; font-size: 24px; }
+  .progress { display: flex; gap: 3px; justify-content: center; width: min(100%, 440px); }
+  .progress i { flex: 1 1 0; max-width: 16px; min-width: 3px; height: 9px; border-radius: 5px; background: #efe8da; border: 2px solid #e2d8c4; }
+  .progress i.done { background: var(--accent); border-color: var(--ink); }
+  .progress i.now { background: var(--yellow); border-color: var(--ink); animation: blink 1s infinite; }
   @keyframes blink { 50% { opacity: .35; } }
-  .status { font-size: 15px; margin-top: 6px; min-height: 22px; }
-  .status .who { background: var(--draw-soft); color: #9a6b00; padding: 2px 10px; border-radius: 999px; font-weight: 700; }
-  .hint { display: flex; gap: 6px; justify-content: center; margin-top: 8px; min-height: 40px; flex-wrap: wrap; }
-  .hint span { width: 36px; height: 40px; border-radius: 10px; background: #f6f1e8; border-bottom: 4px solid #e2d6c3;
-    display: flex; align-items: center; justify-content: center; font-family: var(--display); font-size: 24px; }
-  .hint.mine span { background: var(--draw-soft); border-color: var(--draw); }
-  .hint.reveal span { background: var(--good-soft); border-color: var(--good); }
-  .hint .msg { width: auto; padding: 0 14px; font-size: 20px; background: var(--good-soft); border-color: var(--good); color: var(--good); }
+  .status { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .status .who { background: var(--yellow); border: 2px solid var(--ink); padding: 1px 10px; border-radius: 999px; font-weight: 800; }
+  .cattag { display: inline-block; font-size: 13px; background: var(--sky-soft); border: 2px solid var(--ink); padding: 1px 10px; border-radius: 999px; font-weight: 700; }
+  .hint { display: flex; gap: 6px; justify-content: center; flex-wrap: nowrap; }
+  .hint span { width: 34px; height: 40px; border-radius: 10px; background: #fff; border: 3px solid var(--ink); box-shadow: 2px 2px 0 var(--ink);
+    display: flex; align-items: center; justify-content: center; font-family: var(--display); font-size: 22px; }
+  .hint.mine span { background: var(--yellow-soft); }
+  .hint.reveal span { background: var(--mint-soft); animation: flip .4s both; }
+  .hint.reveal span:nth-child(2) { animation-delay: .06s; } .hint.reveal span:nth-child(3) { animation-delay: .12s; } .hint.reveal span:nth-child(4) { animation-delay: .18s; }
+  @keyframes flip { from { transform: rotateX(90deg); } }
 
   /* 타이머 링 */
-  .timer { position: relative; width: 74px; height: 74px; }
+  .timerwrap { display: flex; justify-content: flex-end; }
+  .timer { position: relative; width: 80px; height: 80px; }
   .timer svg { transform: rotate(-90deg); }
   .timer .track { stroke: #f1e9dc; }
   .timer .bar { stroke: var(--good); transition: stroke-dashoffset .25s linear, stroke .3s; }
+  .timer .face { position: absolute; inset: 9px; border-radius: 50%; background: #fff; border: 3px solid var(--ink); }
   .timer .num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--display); font-size: 26px; }
   .timer.mid .bar { stroke: var(--warn); }
   .timer.low .bar { stroke: var(--bad); }
@@ -84,115 +95,127 @@
   @keyframes pulse { 50% { transform: scale(1.25); } }
   @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-3px) rotate(-3deg); } 75% { transform: translateX(3px) rotate(3deg); } }
 
-  .layout { display: grid; grid-template-columns: 240px 1fr 300px; gap: 14px; margin-top: 14px; align-items: start; }
-  .panel-title { font-family: var(--display); font-size: 18px; padding: 14px 16px 6px; color: var(--muted); }
+  .layout { display: grid; grid-template-columns: 240px 1fr 300px; gap: 16px; margin-top: 16px; align-items: start; }
+  .panel-title { font-family: var(--display); font-size: 19px; padding: 14px 16px 8px; display: flex; align-items: center; gap: 6px; }
 
-  /* 플레이어 */
-  #players { list-style: none; margin: 0; padding: 6px 10px 12px; }
-  #players li { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 14px; margin-bottom: 6px; border: 2px solid transparent; position: relative; }
-  #players li.me { background: #fafafa; }
-  #players li.drawer { background: var(--draw-soft); border-color: var(--draw); }
-  #players li.winner { background: var(--good-soft); border-color: var(--good); }
-  .avatar { width: 38px; height: 38px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-family: var(--display); font-size: 18px; flex: none; }
+  /* 순위표 */
+  #players { list-style: none; margin: 0; padding: 4px 10px 12px; }
+  #players li { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 16px; margin-bottom: 8px; border: 2px solid transparent; position: relative; background: #faf7f0; }
+  #players li.me { border-color: var(--line); }
+  #players li.drawer { background: var(--yellow-soft); border: 2px solid var(--ink); }
+  #players li.winner { background: var(--mint-soft); border: 2px solid var(--ink); }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; flex: none; border: 2px solid var(--ink); }
   .pinfo { flex: 1; min-width: 0; }
-  .pname { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .tags { display: flex; gap: 4px; margin-top: 2px; flex-wrap: wrap; }
-  .tag { font-size: 11px; padding: 1px 7px; border-radius: 999px; background: #f1ece4; color: var(--muted); font-weight: 700; }
-  .tag.t-draw { background: var(--draw); color: #fff; }
+  .pname { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tags { display: flex; gap: 3px; margin-top: 2px; flex-wrap: wrap; }
+  .tag { font-size: 11px; padding: 0 7px; border-radius: 999px; background: #efe9dd; color: var(--muted); font-weight: 800; }
+  .tag.t-draw { background: var(--yellow); color: var(--ink); }
   .tag.t-win { background: var(--good); color: #fff; }
-  .tag.t-host { background: #ffe8a3; color: #8a6400; }
-  .pscore { font-family: var(--display); font-size: 22px; }
-  .rk { width: 26px; text-align: center; font-family: var(--display); font-size: 18px; color: var(--muted); flex: none; }
-  .rk.top { font-size: 22px; }
-  .pop { position: absolute; right: 10px; top: -8px; font-family: var(--display); color: var(--good); font-size: 20px; animation: popup 1.6s forwards; pointer-events: none; }
+  .tag.t-host { background: var(--lav); color: var(--ink); }
+  .pscore { font-family: var(--display); font-size: 21px; }
+  .rk { width: 24px; text-align: center; font-family: var(--display); font-size: 17px; color: var(--muted); flex: none; }
+  .rk.top { font-size: 21px; }
+  .pop { position: absolute; right: 8px; top: -12px; font-family: var(--display); color: #fff; background: var(--good); border: 2px solid var(--ink); border-radius: 999px; padding: 0 8px; font-size: 17px; animation: popup 1.6s forwards; pointer-events: none; }
   @keyframes popup { 0% { opacity: 0; transform: translateY(10px) scale(.6); } 20% { opacity: 1; transform: translateY(0) scale(1.2); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-18px); } }
 
   /* 그림판 */
   .stagecard { padding: 12px; }
   .stage { position: relative; }
-  canvas#board { display: block; width: 100%; aspect-ratio: 4 / 3; background: #fff; border-radius: 14px; border: 2px solid var(--line); touch-action: none; }
-  canvas#board.can { cursor: crosshair; border-color: var(--draw); }
-  .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 14px; background: rgba(255, 252, 246, .94); border-radius: 14px; text-align: center; padding: 20px; animation: fadein .25s; }
+  canvas#board { display: block; width: 100%; aspect-ratio: 4 / 3; background: #fff; border-radius: 16px; border: 3px solid var(--line); touch-action: none; }
+  canvas#board.can { cursor: crosshair; border-color: var(--yellow); }
+  .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: auto;
+    gap: 12px; background: rgba(255, 253, 247, .96); border-radius: 16px; text-align: center; padding: 16px; animation: fadein .25s; }
   @keyframes fadein { from { opacity: 0; } }
-  .overlay h2 { font-size: 30px; }
-  /* 대기실: 그림판을 숨기고 안내 상자가 내용 길이만큼 늘어나게 (버튼이 밖으로 튀어나오지 않게) */
-  .stage.lobby canvas#board { display: none; }
-  .stage.lobby .overlay { position: relative; inset: auto; min-height: 460px; gap: 12px; padding: 24px 16px; border: 2px solid var(--line); }
-  .stage.lobby .bigicon { font-size: 40px; }
+  .overlay h2 { font-size: 28px; }
   .overlay p { margin: 0; color: var(--muted); }
+  .bigicon { font-size: 44px; line-height: 1; }
   .choices { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
-  .choices .wordbtn { font-family: var(--display); font-size: 26px; padding: 14px 26px 10px; border-radius: 18px; border: 3px solid var(--draw); background: var(--draw-soft); box-shadow: 0 5px 0 var(--draw); display: flex; flex-direction: column; align-items: center; gap: 2px; }
-  .choices .wordbtn small { font-family: inherit; font-size: 13px; color: #9a6b00; }
-  .catchip { font-size: 14px; padding: 6px 12px; border-radius: 999px; }
-  .catchip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .catlist { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 560px; }
-  .catlist .catchip:disabled { opacity: 1; cursor: default; }
-  .cattag { display: inline-block; font-size: 14px; background: var(--accent-soft); color: var(--accent); padding: 2px 10px; border-radius: 999px; margin-bottom: 4px; }
-  .bigicon { font-size: 56px; line-height: 1; }
-  .lobbyplayers { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 520px; }
-  .lobbyplayers .lp { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 72px; font-size: 13px; font-weight: 700; }
-  .lobbyplayers .avatar { width: 50px; height: 50px; font-size: 22px; }
-  .settings { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; background: #fff; padding: 10px 16px; border-radius: 14px; border: 2px solid var(--line); }
-  .result-word { font-family: var(--display); font-size: 44px; color: var(--accent); }
-  .winbox { display: flex; align-items: center; gap: 12px; background: var(--good-soft); border: 3px solid var(--good); padding: 12px 20px; border-radius: 18px; animation: bounce .5s; }
-  .winbox .avatar { width: 48px; height: 48px; font-size: 22px; }
-  .winbox .wn { font-family: var(--display); font-size: 24px; }
+  .choices .wordbtn { font-family: var(--display); font-size: 25px; padding: 12px 22px 8px; background: var(--yellow-soft); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .choices .wordbtn:nth-child(2) { background: var(--pink-soft); } .choices .wordbtn:nth-child(3) { background: var(--mint-soft); }
+  .choices .wordbtn small { font-family: "Pretendard", sans-serif; font-size: 12px; color: var(--muted); }
+  .result-word { font-family: var(--display); font-size: 46px; color: var(--accent); -webkit-text-stroke: 1px var(--ink); }
+  .winbox { display: flex; align-items: center; gap: 12px; background: var(--mint-soft); border: 3px solid var(--ink); box-shadow: var(--pop); padding: 10px 18px; border-radius: 20px; animation: bounce .5s; }
+  .winbox .avatar { width: 50px; height: 50px; font-size: 28px; }
+  .winbox .wn { font-family: var(--display); font-size: 23px; }
   .winbox .wp { font-family: var(--display); font-size: 30px; color: var(--good); }
   @keyframes bounce { 0% { transform: scale(.5); } 60% { transform: scale(1.1); } 100% { transform: scale(1); } }
-  .nextbar { width: 220px; height: 8px; background: #eee5d8; border-radius: 4px; overflow: hidden; }
+  .nextbar { width: 220px; height: 12px; background: #efe8da; border: 2px solid var(--ink); border-radius: 999px; overflow: hidden; }
   .nextbar i { display: block; height: 100%; background: var(--accent); animation: fill linear forwards; }
   @keyframes fill { from { width: 0; } to { width: 100%; } }
 
-  .tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px; padding: 8px 10px; background: #fffaf0; border-radius: 14px; }
-  .tools .sep { width: 2px; height: 26px; background: var(--line); margin: 0 2px; }
-  .swatch { width: 30px; height: 30px; border-radius: 50%; padding: 0; border: 3px solid #fff; box-shadow: 0 0 0 2px var(--line); }
-  .swatch.on { box-shadow: 0 0 0 3px var(--accent); transform: scale(1.12); }
-  .sizebtn { width: 38px; height: 38px; padding: 0; display: flex; align-items: center; justify-content: center; }
+  /* 대기실 (그림판 대신 보이는 별도 상자 → 내용만큼 늘어남) */
+  .lobby { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 18px 8px 10px; text-align: center; }
+  .lobby h2 { font-size: 32px; }
+  .lobby .sub { color: var(--muted); margin: -8px 0 0; font-size: 14px; }
+  .lobbyplayers { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+  .lobbyplayers .lp { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 76px; font-size: 13px; font-weight: 800; animation: bounce .4s; }
+  .lobbyplayers .lp span:last-child { max-width: 76px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lobbyplayers .avatar { width: 56px; height: 56px; font-size: 30px; border-width: 3px; }
+  .lobbyplayers .empty { width: 56px; height: 56px; border-radius: 50%; border: 3px dashed #d8cfbd; display: flex; align-items: center; justify-content: center; color: #cfc5b1; font-size: 22px; }
+  .setbox { width: 100%; max-width: 560px; background: #fffaf0; border: 3px solid var(--ink); border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
+  .setrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; font-weight: 700; }
+  .setrow .lbl { font-family: var(--display); font-size: 17px; font-weight: 400; }
+  .setrow select { padding: 6px 10px; }
+  .pill { display: inline-block; background: #fff; border: 2px solid var(--ink); border-radius: 999px; padding: 2px 12px; font-weight: 800; }
+  .catlist { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .catchip { font-size: 15px; padding: 6px 14px; border-radius: 999px; box-shadow: 2px 2px 0 var(--ink); background: #fff; }
+  .catchip.on { background: var(--pink); }
+  .catlist .catchip:disabled { opacity: 1; cursor: default; }
+  #startBtn { font-size: 22px; padding: 12px 40px; }
+
+  /* 도구 */
+  .tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px; padding: 8px 10px; background: #fffaf0; border: 2px dashed #e2d8c4; border-radius: 16px; }
+  .tools .sep { width: 3px; height: 26px; background: var(--line); border-radius: 2px; margin: 0 2px; }
+  .swatch { width: 30px; height: 30px; border-radius: 50%; padding: 0; border: 3px solid var(--ink); box-shadow: none; }
+  .swatch:hover:not(:disabled) { box-shadow: none; }
+  .swatch.on { transform: scale(1.18); box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--accent); }
+  .sizebtn { width: 38px; height: 38px; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 2px 2px 0 var(--ink); }
   .sizebtn i { display: block; border-radius: 50%; background: var(--ink); }
-  .sizebtn.on, .toolbtn.on { border-color: var(--accent); background: var(--accent-soft); }
-  .toolbtn { font-size: 14px; padding: 7px 12px; }
+  .sizebtn.on, .toolbtn.on { background: var(--yellow); }
+  .toolbtn { font-size: 14px; padding: 6px 12px; box-shadow: 2px 2px 0 var(--ink); }
 
   /* 채팅 */
-  .chatbox { display: flex; flex-direction: column; height: calc(100vh - 210px); min-height: 420px; max-height: 720px; }
-  #log { flex: 1; overflow-y: auto; padding: 6px 12px 10px; font-size: 14px; }
-  #log .m { margin: 5px 0; line-height: 1.45; word-break: break-all; }
+  .chatbox { display: flex; flex-direction: column; height: calc(100vh - 250px); min-height: 440px; max-height: 720px; overflow: hidden; }
+  #log { flex: 1; overflow-y: auto; padding: 4px 12px 10px; font-size: 14px; }
+  #log .m { margin: 6px 0; line-height: 1.45; word-break: break-all; background: #f7f4ff; border-radius: 14px 14px 14px 4px; padding: 6px 10px; width: fit-content; max-width: 100%; }
   #log .m .n { font-weight: 800; margin-right: 6px; }
-  #log .sys { color: var(--muted); font-size: 13px; text-align: center; margin: 8px 0; }
-  #log .ok { background: var(--good-soft); color: var(--good); font-weight: 700; padding: 6px 10px; border-radius: 10px; text-align: center; margin: 8px 0; }
-  #log .info { background: var(--accent-soft); color: var(--accent); font-weight: 700; padding: 6px 10px; border-radius: 10px; text-align: center; margin: 8px 0; }
-  .chatform { display: flex; gap: 8px; padding: 10px; border-top: 2px solid var(--line); }
-  .chatform input { flex: 1; min-width: 0; }
-  .chatform button { padding: 9px 14px; font-size: 16px; }
-  .chathint { font-size: 12px; color: var(--muted); padding: 0 12px 10px; }
+  #log .sys { color: var(--muted); font-size: 12px; text-align: center; margin: 8px 0; }
+  #log .ok { background: var(--mint-soft); border: 2px solid var(--ink); font-weight: 800; padding: 6px 10px; border-radius: 12px; text-align: center; margin: 8px 0; }
+  #log .info { background: var(--yellow-soft); border: 2px solid var(--ink); font-weight: 800; padding: 6px 10px; border-radius: 12px; text-align: center; margin: 8px 0; }
+  .chatform { display: flex; gap: 8px; padding: 10px; border-top: 3px solid var(--ink); background: #fffaf0; }
+  .chatform input { flex: 1; min-width: 0; padding: 9px 12px; }
+  .chatform button { padding: 8px 14px; font-size: 17px; }
+  .chathint { font-size: 12px; color: var(--muted); padding: 0 12px 8px; background: #fffaf0; min-height: 8px; }
 
   /* 최종 결과 */
-  #result { position: fixed; inset: 0; background: rgba(43, 45, 66, .45); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 16px; animation: fadein .3s; }
-  #result .box { width: min(640px, 100%); padding: 28px 24px; text-align: center; max-height: 92vh; overflow-y: auto; }
-  #result h2 { font-size: 38px; color: var(--accent); }
-  .podium { display: flex; align-items: flex-end; justify-content: center; gap: 12px; margin: 26px 0 16px; }
+  #result { position: fixed; inset: 0; background: rgba(59, 51, 85, .45); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 16px; animation: fadein .3s; }
+  #result .box { width: min(640px, 100%); padding: 26px 24px; text-align: center; max-height: 92vh; overflow-y: auto; }
+  #result h2 { font-size: 40px; }
+  .podium { display: flex; align-items: flex-end; justify-content: center; gap: 12px; margin: 22px 0 16px; }
   .pod { display: flex; flex-direction: column; align-items: center; width: 150px; }
-  .pod .avatar { width: 58px; height: 58px; font-size: 26px; margin-bottom: 6px; border: 4px solid #fff; box-shadow: var(--shadow); }
+  .pod .avatar { width: 60px; height: 60px; font-size: 32px; margin-bottom: 6px; border-width: 3px; }
   .pod .pn { font-weight: 800; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pod .ps { font-family: var(--display); font-size: 22px; margin-bottom: 6px; }
-  .pod .block { width: 100%; border-radius: 14px 14px 0 0; display: flex; justify-content: center; padding-top: 10px; font-size: 40px; animation: rise .7s ease-out both; }
-  .pod.p1 .block { height: 150px; background: linear-gradient(#ffd75e, #f5b700); }
-  .pod.p2 .block { height: 110px; background: linear-gradient(#e6e9f0, #b8bfcc); animation-delay: .15s; }
-  .pod.p3 .block { height: 80px; background: linear-gradient(#f3c39b, #d58b52); animation-delay: .3s; }
-  .pod.p1 .avatar { width: 70px; height: 70px; font-size: 30px; }
+  .pod .block { width: 100%; border: 3px solid var(--ink); border-bottom: 0; border-radius: 16px 16px 0 0; display: flex; justify-content: center; padding-top: 10px; font-size: 40px; animation: rise .7s ease-out both; }
+  .pod.p1 .block { height: 150px; background: var(--yellow); }
+  .pod.p2 .block { height: 110px; background: var(--sky); animation-delay: .15s; }
+  .pod.p3 .block { height: 80px; background: var(--pink); animation-delay: .3s; }
+  .pod.p1 .avatar { width: 74px; height: 74px; font-size: 40px; }
+  .podium-base { height: 10px; background: var(--ink); border-radius: 6px; margin: -16px auto 18px; max-width: 480px; }
   @keyframes rise { from { transform: scaleY(0); transform-origin: bottom; } to { transform: scaleY(1); transform-origin: bottom; } }
   .restlist { list-style: none; padding: 0; margin: 0 auto 18px; max-width: 360px; text-align: left; }
-  .restlist li { display: flex; justify-content: space-between; padding: 8px 14px; border-radius: 12px; background: #faf6ef; margin-bottom: 6px; font-weight: 700; }
+  .restlist li { display: flex; justify-content: space-between; padding: 8px 14px; border-radius: 12px; background: #faf6ef; border: 2px solid var(--line); margin-bottom: 6px; font-weight: 800; }
 
   #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 30; }
 
-  @media (max-width: 1000px) {
+  @media (max-width: 1060px) {
     .layout { grid-template-columns: 1fr; }
     #players { display: flex; flex-wrap: wrap; gap: 6px; }
     #players li { margin: 0; }
     .chatbox { height: 340px; min-height: 0; }
     .topbar { grid-template-columns: 1fr auto; }
-    .roombox { grid-column: 1 / -1; }
+    .roombox { grid-column: 1 / -1; flex-direction: row; }
+    .center { grid-column: 1; }
   }
 </style>
 </head>
@@ -202,8 +225,9 @@
 
 <!-- 1) 입장 화면 -->
 <section id="join" class="card">
+  <span class="deco" style="left:-18px;top:-20px">✏️</span><span class="deco" style="right:-14px;top:30px">⭐</span><span class="deco" style="left:-16px;bottom:40px">🖍️</span>
   <div class="logo">🎨</div>
-  <h1>그림 맞추기</h1>
+  <h1><span style="color:#ff9ec4">그</span><span style="color:#ffd84d">림</span> <span style="color:#8fe3c8">맞</span><span style="color:#9cc9ff">추</span><span style="color:#c4b2ff">기</span></h1>
   <p class="sub">한 명이 그리고, 가장 먼저 맞힌 사람이 점수를 가져가요!</p>
   <label for="nameInput">닉네임</label>
   <input id="nameInput" maxlength="10" placeholder="예: 세훈">
@@ -230,11 +254,11 @@
       <div id="catInfo"></div>
       <div id="hint" class="hint"></div>
     </div>
-    <div id="timer" class="timer hidden">
-      <svg width="74" height="74"><circle class="track" cx="37" cy="37" r="31" fill="none" stroke-width="8"/>
-        <circle id="timerBar" class="bar" cx="37" cy="37" r="31" fill="none" stroke-width="8" stroke-linecap="round" stroke-dasharray="194.8" stroke-dashoffset="0"/></svg>
-      <div id="timerNum" class="num"></div>
-    </div>
+    <div class="timerwrap"><div id="timer" class="timer off">
+      <svg width="80" height="80"><circle class="track" cx="40" cy="40" r="34" fill="none" stroke-width="9"/>
+        <circle id="timerBar" class="bar" cx="40" cy="40" r="34" fill="none" stroke-width="9" stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="0"/></svg>
+      <div class="face"></div><div id="timerNum" class="num"></div>
+    </div></div>
   </div>
   <div class="layout">
     <div class="card">
@@ -242,6 +266,7 @@
       <ul id="players"></ul>
     </div>
     <div class="card stagecard">
+      <div id="lobbyPanel" class="lobby hidden"></div>
       <div class="stage">
         <canvas id="board" width="800" height="600"></canvas>
         <div id="overlay" class="overlay"></div>
@@ -270,7 +295,8 @@
 const SUPABASE_URL = "https://ejwoofgujgnmeixwispl.supabase.co";   // 예: "https://abcdxyz.supabase.co"
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqd29vZmd1amdubWVpeHdpc3BsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQwNDQ0NzUsImV4cCI6MjEwOTYyMDQ3NX0.P49zFX3Dk6rB0-bGJex94khJER4g517lXAhqruUbTk8";   // anon(공개) 키 또는 publishable 키. 절대 service_role/secret 키 넣지 말기!
 
-const TOTAL_Q = 20;        // 한 게임 문제 수
+const TOTAL_Q = 20;        // 한 게임 기본 문제 수
+const Q_OPTIONS = [5, 10, 15, 20, 30, 40];   // 방장이 고를 수 있는 문제 수
 const CHOOSE_MS = 15000;   // 제시어 고르는 시간
 const RESULT_MS = 2500;    // 정답 공개 후 다음 문제까지 (2.5초)
 
@@ -352,7 +378,10 @@ const norm = (t) => String(t).replace(/\s+/g, "").toLowerCase();
 const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const AV_COLORS = ["#ff6b6b", "#f59f00", "#37b24d", "#1c7ed6", "#7048e8", "#e64980", "#0ca678", "#f76707", "#4263eb", "#ae3ec9"];
 function avColor(id) { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return AV_COLORS[h % AV_COLORS.length]; }
-function avatar(id, name) { return `<span class="avatar" style="background:${avColor(id)}">${esc((name || "?").slice(0, 1))}</span>`; }
+const AV_EMOJI = ["🐶", "🐱", "🐰", "🐻", "🐼", "🦊", "🐸", "🐯", "🐨", "🐹", "🐷", "🐵", "🐥", "🦁", "🐮", "🐙"];
+const AV_BG = ["#ffe3ef", "#fff4c2", "#ddf8ee", "#e3f0ff", "#efe9ff", "#ffe8d6"];
+function hashId(id) { let h = 7; for (const c of String(id)) h = (h * 131 + c.charCodeAt(0)) >>> 0; return h; }
+function avatar(id, name) { const h = hashId(id); return `<span class="avatar" title="${esc(name || "")}" style="background:${AV_BG[h % AV_BG.length]}">${AV_EMOJI[(h >>> 3) % AV_EMOJI.length]}</span>`; }
 function nameOf(id) { return (S && S.names[id]) || (present[id] && present[id].name) || "?"; }
 
 // ===================== 통신 (Supabase 또는 테스트 모드) =====================
@@ -595,6 +624,7 @@ function handle(m) {
     case "settings":
       if (isHost && S.phase === "lobby") {
         if (m.drawTime) S.drawTime = m.drawTime;
+        if (Q_OPTIONS.includes(m.totalQ)) S.totalQ = m.totalQ;
         if (Array.isArray(m.cats)) { const c = m.cats.filter((k) => CATS[k]); if (c.length) S.cats = c; }
         pushState();
       }
@@ -627,7 +657,7 @@ function onStateChange(prev, s) {
     revealedQid = s.qid; emit({ t: "reveal", word: myWord, qid: s.qid });
   }
   if (s.phase === "gameOver" && prevPhase !== "gameOver") {
-    sysMsg(s.endReason || "🏁 20문제 끝! 최종 순위를 확인하세요", "info");
+    sysMsg(s.endReason || `🏁 ${s.totalQ}문제 끝! 최종 순위를 확인하세요`, "info");
     if (s.q > 0) confetti(220);
   }
 }
@@ -766,7 +796,7 @@ function render() {
 
   // 플레이어 목록
   const sorted = [...ids].sort((a, b) => sc(b) - sc(a) || present[a].joinedAt - present[b].joinedAt);
-  const showRank = S && (S.phase !== "lobby" || sorted.some((id) => sc(id) > 0));
+  const showRank = S && sorted.some((id) => sc(id) > 0);   // 점수가 생기면 등수 표시
   const rankOf = (id) => 1 + sorted.filter((x) => sc(x) > sc(id)).length;   // 동점이면 같은 등수
   setHTML($("players"), sorted.map((id) => {
     const r = rankOf(id), medal = ["🥇", "🥈", "🥉"][r - 1];
@@ -790,7 +820,7 @@ function render() {
       const n = i + 1, done = n < q || (n === q && (S.phase === "result" || S.phase === "gameOver"));
       return `<i class="${done ? "done" : n === q && S.phase !== "gameOver" ? "now" : ""}"></i>`;
     }).join("");
-  } else { $("qinfo").innerHTML = "대기실"; $("progress").innerHTML = ""; }
+  } else { $("qinfo").innerHTML = "🎨 대기실"; $("progress").innerHTML = ""; }
 
   let status = "";
   if (S.phase === "choosing") status = amDrawer ? "내가 출제자! 그릴 단어를 골라요" : `<span class="who">✏️ ${esc(nameOf(S.drawerId))}</span> 님이 단어를 고르는 중`;
@@ -810,25 +840,40 @@ function render() {
   cv.classList.toggle("can", canDraw());
   $("chatHint").textContent = S.phase === "drawing" ? (amDrawer ? "출제자는 정답 단어가 들어간 말을 보낼 수 없어요" : "가장 먼저 맞힌 1명이 점수를 가져가요!") : "";
 
-  // 가운데 안내 화면
-  ov.closest(".stage").classList.toggle("lobby", S.phase === "lobby");
+  // 가운데: 대기실이면 그림판 대신 대기실 상자(내용만큼 늘어남), 아니면 그림판 + 안내
+  const inLobby = S.phase === "lobby", lp = $("lobbyPanel");
+  lp.classList.toggle("hidden", !inLobby);
+  ov.closest(".stage").classList.toggle("hidden", inLobby);
   ov.classList.remove("hidden");
-  if (S.phase === "lobby") {
-    const list = `<div class="lobbyplayers">${ids.map((id) => `<div class="lp">${avatar(id, present[id].name)}<span>${esc(present[id].name)}${id === hostId ? " 👑" : ""}</span></div>`).join("")}</div>`;
+  if (inLobby) {
+    setHTML(ov, "");
+    const slots = Math.max(0, 4 - ids.length);
+    const list = `<div class="lobbyplayers">${ids.map((id) => `<div class="lp">${avatar(id, present[id].name)}<span>${esc(present[id].name)}${id === hostId ? " 👑" : ""}</span></div>`).join("")}${'<div class="lp"><span class="empty">?</span><span>&nbsp;</span></div>'.repeat(slots)}</div>`;
+    const head = `<h2>🎨 대기실</h2><p class="sub">${ids.length}명 모였어요 · ${isHost ? "2명 이상이면 시작할 수 있어요" : "방장(👑)이 시작하길 기다리는 중..."}</p>`;
     if (isHost) {
-      if (setHTML(ov, `<div class="bigicon">🎨</div><h2>대기실</h2><p>${ids.length}명 접속 중 · 2명 이상이면 시작할 수 있어요</p>${list}
-        <div class="settings">📝 총 <b>${TOTAL_Q}</b>문제 · ⏱️ 제한 시간 <select id="setT">${[60, 80, 100, 120].map((n) => `<option ${n === S.drawTime ? "selected" : ""}>${n}</option>`).join("")}</select>초</div>
-        <p>📚 문제 분야 (눌러서 켜고 끄기 · 여러 개 가능)</p>${catChips(true)}
-        <button id="startBtn" class="primary" ${ids.length < 2 ? "disabled" : ""}>게임 시작!</button>`)) {
-      $("setT").onchange = () => emit({ t: "settings", drawTime: +$("setT").value });
-      ov.querySelectorAll(".catchip").forEach((b) => b.onclick = () => {
-        const k = b.dataset.k, cur = S.cats || [];
-        const next = cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k];
-        if (!next.length) { sysMsg("분야는 최소 1개는 골라야 해요."); return; }
-        emit({ t: "settings", cats: next });
-      });
-      $("startBtn").onclick = () => emit({ t: "start" }); }
-    } else setHTML(ov, `<div class="bigicon">🎨</div><h2>대기실</h2><p>${ids.length}명 접속 중 · 방장(👑)이 시작하길 기다리는 중...</p>${list}<div class="settings">📝 총 <b>${TOTAL_Q}</b>문제 · ⏱️ 제한 시간 <b>${S.drawTime}</b>초</div><p>📚 문제 분야 (방장이 정해요)</p>${catChips(false)}`);
+      if (setHTML(lp, `${head}${list}
+        <div class="setbox">
+          <div class="setrow"><span class="lbl">📝 문제 수</span><select id="setQ">${Q_OPTIONS.map((n) => `<option value="${n}" ${n === S.totalQ ? "selected" : ""}>${n}문제</option>`).join("")}</select><span class="lbl" style="margin-left:10px">⏱️ 제한 시간</span><select id="setT">${[60, 80, 100, 120].map((n) => `<option value="${n}" ${n === S.drawTime ? "selected" : ""}>${n}초</option>`).join("")}</select></div>
+          <div class="setrow"><span class="lbl">📚 문제 분야</span><span style="font-size:12px;color:var(--muted);font-weight:400">눌러서 켜고 끄기 · 여러 개 가능</span></div>
+          ${catChips(true)}
+        </div>
+        <button id="startBtn" class="primary" ${ids.length < 2 ? "disabled" : ""}>게임 시작! 🚀</button>`)) {
+        $("setT").onchange = () => emit({ t: "settings", drawTime: +$("setT").value });
+        $("setQ").onchange = () => emit({ t: "settings", totalQ: +$("setQ").value });
+        lp.querySelectorAll(".catchip").forEach((b) => b.onclick = () => {
+          const k = b.dataset.k, cur = S.cats || [];
+          const next = cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k];
+          if (!next.length) { sysMsg("분야는 최소 1개는 골라야 해요."); return; }
+          emit({ t: "settings", cats: next });
+        });
+        $("startBtn").onclick = () => emit({ t: "start" });
+      }
+    } else setHTML(lp, `${head}${list}
+        <div class="setbox">
+          <div class="setrow"><span class="lbl">📝 문제 수</span><span class="pill">${S.totalQ}문제</span><span class="lbl" style="margin-left:10px">⏱️ 제한 시간</span><span class="pill">${S.drawTime}초</span></div>
+          <div class="setrow"><span class="lbl">📚 문제 분야</span><span style="font-size:12px;color:var(--muted);font-weight:400">방장이 정해요</span></div>
+          ${catChips(false)}
+        </div>`);
   } else if (S.phase === "choosing") {
     if (amDrawer && !(myWord && myWordQid === S.qid)) {
       if (choseForQid !== S.qid) { choseForQid = S.qid; myChoices = pick3(); }
@@ -860,7 +905,7 @@ function renderResult() {
   const rank = Object.keys(S.scores).filter((id) => S.names[id]).sort((a, b) => S.scores[b] - S.scores[a]);
   const pod = (i, cls, medal) => rank[i] ? `<div class="pod ${cls}">${avatar(rank[i], S.names[rank[i]])}<div class="pn">${esc(S.names[rank[i]])}</div><div class="ps">${S.scores[rank[i]]}점</div><div class="block">${medal}</div></div>` : "";
   $("resultBox").innerHTML = `<h2>🏆 최종 순위</h2><p style="color:var(--muted);margin:6px 0 0">${esc(S.endReason || `${S.totalQ}문제 완료!`)}</p>
-    <div class="podium">${pod(1, "p2", "🥈")}${pod(0, "p1", "🥇")}${pod(2, "p3", "🥉")}</div>
+    <div class="podium">${pod(1, "p2", "🥈")}${pod(0, "p1", "🥇")}${pod(2, "p3", "🥉")}</div><div class="podium-base"></div>
     ${rank.length > 3 ? `<ol class="restlist">${rank.slice(3).map((id, i) => `<li><span>${i + 4}. ${esc(S.names[id])}</span><span>${S.scores[id]}점</span></li>`).join("")}</ol>` : ""}
     <div class="choices">${isHost ? '<button id="againBtn" class="primary">🔁 한 판 더</button><button id="lobbyBtn">대기실로</button>' : '<p style="color:var(--muted)">방장이 다음 판을 정할 거예요</p>'}<button id="closeRes">결과 닫기</button></div>`;
   box.classList.remove("hidden");
@@ -873,11 +918,11 @@ setInterval(() => {
   if (!S) return;
   const leftMs = Math.max(0, localEnds - Date.now()), left = Math.ceil(leftMs / 1000);
   const show = S.phase === "drawing" || S.phase === "choosing";
-  const tm = $("timer"); tm.classList.toggle("hidden", !show);
+  const tm = $("timer"); tm.classList.toggle("off", !show);
   if (show) {
     const frac = S.timerTotal ? leftMs / S.timerTotal : 0;
     $("timerNum").textContent = left;
-    $("timerBar").style.strokeDashoffset = String(194.8 * (1 - frac));
+    $("timerBar").style.strokeDashoffset = String(213.6 * (1 - frac));
     const d = S.phase === "drawing";
     tm.classList.toggle("mid", d && frac <= .5 && left > 10);
     tm.classList.toggle("low", d && left <= 10);
