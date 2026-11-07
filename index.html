@@ -43,6 +43,7 @@
   #join .sub.err { color: var(--bad); }
   #join label { display: block; font-size: 14px; color: var(--muted); margin: 14px 0 6px; font-weight: 600; }
   #join input { width: 100%; }
+  #join .joinhelp { font-size: 12px; color: var(--muted); margin: 6px 0 0; line-height: 1.5; }
   #join .row { display: flex; gap: 10px; margin-top: 22px; }
   #join .row > * { flex: 1; }
   #join .row button:not(.primary) { font-family: var(--display); font-size: 18px; }
@@ -101,6 +102,8 @@
   .tag.t-win { background: var(--good); color: #fff; }
   .tag.t-host { background: #ffe8a3; color: #8a6400; }
   .pscore { font-family: var(--display); font-size: 22px; }
+  .rk { width: 26px; text-align: center; font-family: var(--display); font-size: 18px; color: var(--muted); flex: none; }
+  .rk.top { font-size: 22px; }
   .pop { position: absolute; right: 10px; top: -8px; font-family: var(--display); color: var(--good); font-size: 20px; animation: popup 1.6s forwards; pointer-events: none; }
   @keyframes popup { 0% { opacity: 0; transform: translateY(10px) scale(.6); } 20% { opacity: 1; transform: translateY(0) scale(1.2); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-18px); } }
 
@@ -115,7 +118,13 @@
   .overlay h2 { font-size: 30px; }
   .overlay p { margin: 0; color: var(--muted); }
   .choices { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
-  .choices .wordbtn { font-family: var(--display); font-size: 26px; padding: 18px 26px; border-radius: 18px; border: 3px solid var(--draw); background: var(--draw-soft); box-shadow: 0 5px 0 var(--draw); }
+  .choices .wordbtn { font-family: var(--display); font-size: 26px; padding: 14px 26px 10px; border-radius: 18px; border: 3px solid var(--draw); background: var(--draw-soft); box-shadow: 0 5px 0 var(--draw); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .choices .wordbtn small { font-family: inherit; font-size: 13px; color: #9a6b00; }
+  .catchip { font-size: 14px; padding: 6px 12px; border-radius: 999px; }
+  .catchip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .catlist { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 560px; }
+  .catlist .catchip:disabled { opacity: 1; cursor: default; }
+  .cattag { display: inline-block; font-size: 14px; background: var(--accent-soft); color: var(--accent); padding: 2px 10px; border-radius: 999px; margin-bottom: 4px; }
   .bigicon { font-size: 56px; line-height: 1; }
   .lobbyplayers { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 520px; }
   .lobbyplayers .lp { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 72px; font-size: 13px; font-weight: 700; }
@@ -194,8 +203,9 @@
   <p class="sub">한 명이 그리고, 가장 먼저 맞힌 사람이 점수를 가져가요!</p>
   <label for="nameInput">닉네임</label>
   <input id="nameInput" maxlength="10" placeholder="예: 세훈">
-  <label for="roomInput">방 코드 (친구 방에 들어갈 때)</label>
-  <input id="roomInput" maxlength="6" placeholder="예: AB12">
+  <label for="roomInput">방 번호 (영어·숫자 2~12자)</label>
+  <input id="roomInput" maxlength="12" placeholder="예: 1234, sehun, ROOM7">
+  <p class="joinhelp">만들 때는 원하는 번호를 정하고, 들어갈 때는 친구가 알려준 번호를 넣어요.<br>비워 두고 방 만들기를 누르면 번호가 자동으로 정해져요.</p>
   <div class="row">
     <button id="createBtn" class="primary">방 만들기</button>
     <button id="enterBtn">입장하기</button>
@@ -213,6 +223,7 @@
       <div id="qinfo" class="qinfo"></div>
       <div id="progress" class="progress"></div>
       <div id="status" class="status"></div>
+      <div id="catInfo"></div>
       <div id="hint" class="hint"></div>
     </div>
     <div id="timer" class="timer hidden">
@@ -223,7 +234,7 @@
   </div>
   <div class="layout">
     <div class="card">
-      <div class="panel-title">👥 플레이어</div>
+      <div class="panel-title">🏆 순위표</div>
       <ul id="players"></ul>
     </div>
     <div class="card stagecard">
@@ -259,19 +270,26 @@ const TOTAL_Q = 20;        // 한 게임 문제 수
 const CHOOSE_MS = 15000;   // 제시어 고르는 시간
 const RESULT_MS = 2500;    // 정답 공개 후 다음 문제까지 (2.5초)
 
-// 제시어 목록 (자유롭게 추가 가능)
-const WORDS = ("사과 바나나 포도 수박 딸기 당근 고양이 강아지 토끼 기린 코끼리 사자 호랑이 펭귄 거북이 문어 상어 고래 " +
-  "나비 달팽이 거미 개구리 공룡 자동차 비행기 자전거 기차 배 로켓 버스 우산 안경 모자 신발 양말 시계 가방 " +
-  "연필 책 컴퓨터 핸드폰 텔레비전 냉장고 의자 침대 열쇠 전구 카메라 기타 피아노 드럼 축구공 야구 농구 수영 " +
-  "눈사람 무지개 태양 달 별 구름 번개 화산 섬 산 바다 폭포 나무 꽃 선인장 버섯 집 성 다리 등대 피라미드 " +
-  "햄버거 피자 라면 김밥 아이스크림 케이크 도넛 치킨 떡볶이 커피 우유 계란 생일 크리스마스 산타 유령 " +
-  "로봇 외계인 왕관 칼 방패 해적 마법사 천사 손 발 눈 코 입 귀 이빨 하트 사다리 텐트 캠핑 낚시 " +
-  "칫솔 거울 소방차 경찰 의사 선생님 요리사 헬리콥터 잠수함 낙하산 풍선 선물 편지 지도 나침반").split(" ");
+// 제시어 목록 (분야별, 자유롭게 추가 가능 — 띄어쓰기로 구분)
+const CATS = {
+  animal: { name: "🐶 동물", words: "강아지 고양이 토끼 햄스터 기린 코끼리 사자 호랑이 곰 판다 원숭이 고릴라 얼룩말 하마 코뿔소 낙타 캥거루 코알라 여우 늑대 사슴 다람쥐 고슴도치 너구리 돼지 소 말 양 염소 닭 오리 펭귄 부엉이 독수리 앵무새 공작 홍학 비둘기 거북이 악어 뱀 개구리 카멜레온 상어 고래 돌고래 문어 오징어 해파리 불가사리 게 새우 물개 나비 벌 개미 거미 무당벌레 잠자리 달팽이 지렁이 모기 박쥐 두더지 공룡" },
+  food: { name: "🍔 음식", words: "사과 바나나 포도 수박 딸기 복숭아 귤 파인애플 체리 레몬 망고 키위 감 밤 당근 감자 고구마 옥수수 양파 마늘 버섯 오이 토마토 호박 브로콜리 햄버거 피자 라면 김밥 떡볶이 치킨 핫도그 샌드위치 스파게티 초밥 만두 김치 비빔밥 삼겹살 짜장면 붕어빵 호떡 팝콘 아이스크림 케이크 도넛 쿠키 사탕 초콜릿 솜사탕 식빵 계란 우유 커피 주스 콜라 치즈 소시지 와플 탕후루" },
+  item: { name: "🧸 생활용품", words: "칫솔 치약 비누 수건 거울 빗 드라이기 우산 안경 시계 열쇠 지갑 가방 휴대폰 이어폰 컴퓨터 키보드 마우스 텔레비전 리모컨 냉장고 세탁기 선풍기 에어컨 전자레인지 밥솥 냄비 프라이팬 컵 접시 숟가락 젓가락 포크 가위 연필 지우개 공책 달력 액자 전구 촛불 의자 책상 침대 베개 이불 소파 옷걸이 쓰레기통 빗자루 청소기 카메라 손전등 돋보기 자물쇠 저금통 사다리 망치 풍선 선물" },
+  job: { name: "👩‍🍳 직업·인물", words: "의사 간호사 경찰 소방관 선생님 요리사 가수 배우 화가 기자 군인 우주비행사 과학자 프로그래머 마술사 광대 농부 어부 목수 미용사 택배기사 우체부 조종사 승무원 축구선수 판사 약사 수의사 사진작가 유튜버 아나운서 운전기사 제빵사 발레리나 지휘자 탐정 해적 산타 마법사 닌자 왕 공주 로봇 외계인 유령 천사 인어 눈사람" },
+  sport: { name: "⚽ 스포츠·취미", words: "축구 야구 농구 배구 테니스 탁구 배드민턴 골프 볼링 수영 스키 스케이트 스노보드 서핑 낚시 등산 캠핑 자전거 줄넘기 태권도 권투 씨름 양궁 펜싱 체조 마라톤 요가 줄다리기 다이빙 당구 피아노 기타 드럼 바이올린 노래방 독서 게임 그림 춤 뜨개질 종이접기 퍼즐 체스 바둑 연날리기 눈싸움 트램펄린 볼링공" },
+  nature: { name: "🌈 자연·날씨", words: "태양 달 별 구름 비 무지개 번개 바람 태풍 안개 화산 산 바다 강 호수 폭포 섬 사막 동굴 숲 나무 꽃 장미 해바라기 튤립 선인장 잔디 낙엽 단풍 얼음 파도 모래성 지구 은하수 별똥별 일출 노을 지진 고드름 오로라 조개 돌멩이 네잎클로버" },
+  place: { name: "🏰 장소·건물", words: "학교 병원 경찰서 소방서 우체국 은행 도서관 박물관 영화관 놀이공원 동물원 수족관 공원 놀이터 시장 편의점 카페 빵집 호텔 공항 기차역 버스정류장 항구 등대 다리 터널 성 궁전 피라미드 에펠탑 아파트 텐트 수영장 운동장 화장실 엘리베이터 계단 감옥 농장 주유소 무인도 우주정거장 이글루 신호등 분수대" },
+  vehicle: { name: "🚗 탈것", words: "자동차 버스 택시 트럭 기차 지하철 비행기 헬리콥터 배 요트 잠수함 로켓 우주선 오토바이 킥보드 스케이트보드 유모차 휠체어 구급차 소방차 경찰차 포크레인 트랙터 열기구 낙하산 케이블카 롤러코스터 썰매 뗏목 카누 마차 탱크 드론 회전목마 견인차" },
+  body: { name: "👕 몸·옷", words: "코 입 귀 이빨 손 발 손가락 머리카락 수염 눈썹 혀 배꼽 무릎 뼈 심장 근육 모자 넥타이 양말 신발 장화 장갑 목도리 티셔츠 바지 치마 원피스 잠옷 수영복 우비 반지 목걸이 귀걸이 왕관 가면 리본 단추 지퍼 벨트 마스크 슬리퍼" },
+  action: { name: "🤸 행동", words: "양치질 세수 샤워 요리하기 청소하기 빨래 운전 전화하기 사진찍기 줄서기 악수 포옹 손들기 기지개 물구나무 팔굽혀펴기 윗몸일으키기 숨바꼭질 가위바위보 술래잡기 그네타기 미끄럼틀 시소 하이파이브 경례 낮잠 코골기 방귀 딸꾹질 하품 재채기 박수 윙크 졸기 산책 쇼핑 이사 소풍 달리기 점프" },
+};
+for (const k in CATS) CATS[k].words = [...new Set(CATS[k].words.split(/\s+/).filter(Boolean))];
+const CAT_KEYS = Object.keys(CATS);
 
 // ===================== 기본 변수 =====================
 const $ = (id) => document.getElementById(id);
 const myId = Math.random().toString(36).slice(2, 10);
-const joinedAt = Date.now();
+let joinedAt = Date.now();   // 방에 "들어간" 시각 (enter 할 때 다시 정함 → 먼저 들어온 사람이 방장)
 let myName = "", roomCode = "";
 let net = null;            // 통신 담당 객체
 let present = {};          // 지금 접속 중인 사람들 {id: {name, joinedAt}}
@@ -304,7 +322,8 @@ function makeSupabaseNet(room) {
     if (status === "SUBSCRIBED") { await ch.track({ name: myName, joinedAt }); api.ready && api.ready(); }
     if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") sysMsg("서버 연결 문제가 생겼어요. 새로고침해 보세요.");
   });
-  api.send = (msg) => ch.send({ type: "broadcast", event: "m", payload: msg });
+  api.send = (msg) => { if (!api.closed) ch.send({ type: "broadcast", event: "m", payload: msg }); };
+  api.leave = () => { api.closed = true; api.msgFn = api.presFn = api.ready = null; ch.untrack().catch(() => {}); client.removeChannel(ch); };
   return api;
 }
 function makeLocalNet(room) {
@@ -322,14 +341,16 @@ function makeLocalNet(room) {
     if (m.__bye) { delete seen[m.id]; emitPres(); return; }
     api.msgFn && api.msgFn(m);
   };
-  setInterval(() => { bc.postMessage({ __ping: 1, p: me() }); emitPres(); }, 1500);
-  addEventListener("beforeunload", () => bc.postMessage({ __bye: 1, id: myId }));
-  setTimeout(() => { bc.postMessage({ __ping: 1, p: me() }); emitPres(); api.ready && api.ready(); }, 50);
-  api.send = (msg) => bc.postMessage(msg);
+  const iv = setInterval(() => { bc.postMessage({ __ping: 1, p: me() }); emitPres(); }, 1500);
+  const bye = () => bc.postMessage({ __bye: 1, id: myId });
+  addEventListener("beforeunload", bye);
+  setTimeout(() => { if (api.closed) return; bc.postMessage({ __ping: 1, p: me() }); emitPres(); api.ready && api.ready(); }, 50);
+  api.send = (msg) => { if (!api.closed) bc.postMessage(msg); };
+  api.leave = () => { api.closed = true; api.msgFn = api.presFn = api.ready = null; clearInterval(iv); bye(); removeEventListener("beforeunload", bye); bc.close(); };
   return api;
 }
 // emit = 모두에게 보내고 나도 처리 / send = 남에게만
-function emit(msg) { net.send(msg); handle(msg); }
+function emit(msg) { if (!net) return; net.send(msg); handle(msg); }
 
 // ===================== 입장 =====================
 const useSupabase = SUPABASE_URL && SUPABASE_KEY;
@@ -338,11 +359,15 @@ const params = new URLSearchParams(location.search);
 if (params.get("room")) $("roomInput").value = params.get("room");
 try { $("nameInput").value = localStorage.getItem("drawName") || ""; } catch (e) {}
 
-function enter(code) {
+let joinMode = "join";   // "create"(방 만들기) 또는 "join"(입장하기)
+function enter(code, mode) {
   myName = $("nameInput").value.trim();
   if (!myName) { alertBox("닉네임을 입력해 주세요"); return; }
-  code = code.trim().toUpperCase();
-  if (!/^[A-Z0-9]{3,6}$/.test(code)) { alertBox("방 코드는 영문/숫자 3~6자예요"); return; }
+  code = code.trim().toUpperCase();   // 영어 대소문자 구분 없이 같은 방
+  if (!code && mode === "create") code = Array.from({ length: 4 }, () => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random() * 32)]).join("");
+  if (!/^[A-Z0-9]{2,12}$/.test(code)) { alertBox("방 번호는 영어나 숫자로 2~12자예요 (띄어쓰기·특수문자 X)"); return; }
+  joinMode = mode;
+  joinedAt = Date.now();
   try { localStorage.setItem("drawName", myName); } catch (e) {}
   roomCode = code;
   history.replaceState(null, "", "?room=" + code);
@@ -351,13 +376,31 @@ function enter(code) {
   net = useSupabase ? makeSupabaseNet(code) : makeLocalNet(code);
   net.msgFn = handle;
   net.presFn = onPresence;
-  net.ready = () => { setTimeout(() => { settled = true; onPresence(present); }, 2000); net.send({ t: "hello", from: myId }); sysMsg("방에 들어왔어요. 친구에게 초대 링크를 보내 주세요!"); };
+  net.ready = () => {
+    setTimeout(() => {
+      // 방 만들기인데 이미 사람이 있는 번호면 → 돌아가서 다른 번호 고르기
+      if (joinMode === "create" && presentIds().length > 1 && presentIds()[0] !== myId) { leaveRoom(`'${code}' 방은 이미 누가 쓰고 있어요. 다른 번호로 만들거나 '입장하기'를 눌러 주세요.`); return; }
+      if (joinMode === "join" && presentIds().length === 1) sysMsg("아직 이 방에 아무도 없어요. 방 번호가 맞는지 확인해 보세요. (내가 방장이 돼요)");
+      settled = true; onPresence(present);
+    }, 2000);
+    net.send({ t: "hello", from: myId });
+    sysMsg(joinMode === "create" ? `'${code}' 방을 만들었어요. 친구에게 방 번호나 초대 링크를 알려 주세요!` : `'${code}' 방에 들어왔어요.`);
+  };
   render();
 }
+// 방에서 나가 입장 화면으로 돌아가기
+function leaveRoom(msg) {
+  if (net && net.leave) net.leave();
+  net = null; present = {}; S = null; isHost = false; settled = false; localEnds = 0; myWord = null;
+  $("log").innerHTML = ""; $("result").classList.add("hidden");
+  $("game").classList.add("hidden"); $("join").classList.remove("hidden");
+  history.replaceState(null, "", location.pathname);
+  alertBox(msg);
+}
 function alertBox(t) { const p = $("join").querySelector(".sub"); p.textContent = "⚠️ " + t; p.classList.add("err"); }
-$("createBtn").onclick = () => { const c = Array.from({ length: 4 }, () => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random() * 32)]).join(""); enter(c); };
-$("enterBtn").onclick = () => enter($("roomInput").value);
-$("roomInput").addEventListener("keydown", (e) => { if (e.key === "Enter") enter($("roomInput").value); });
+$("createBtn").onclick = () => enter($("roomInput").value, "create");
+$("enterBtn").onclick = () => enter($("roomInput").value, "join");
+$("roomInput").addEventListener("keydown", (e) => { if (e.key === "Enter") enter($("roomInput").value, "join"); });
 $("copyBtn").onclick = async () => {
   const url = location.origin + location.pathname + "?room=" + roomCode;
   try { await navigator.clipboard.writeText(url); sysMsg("초대 링크 복사 완료: " + url); } catch (e) { sysMsg("이 링크를 친구에게 보내 주세요: " + url); }
@@ -385,7 +428,8 @@ function onPresence(list) {
 }
 function newLobby() {
   return { phase: "lobby", names: {}, scores: {}, drawTime: 80, totalQ: TOTAL_Q, q: 0, qid: 0, drawerId: null, wordLen: 0, word: null,
-    winner: null, pts: 0, drawerPts: 0, lastDrawer: null, lastWinner: null, drawCount: {}, timerTotal: 0, endsIn: 0, endReason: null };
+    winner: null, pts: 0, drawerPts: 0, lastDrawer: null, lastWinner: null, drawCount: {}, timerTotal: 0, endsIn: 0, endReason: null,
+    cats: [...CAT_KEYS], cat: null, used: [] };
 }
 function presentIds() { return Object.keys(present).sort((a, b) => present[a].joinedAt - present[b].joinedAt || (a < b ? -1 : 1)); }
 
@@ -398,6 +442,7 @@ function pushState() {
   S.endsIn = Math.max(0, hostEnds - Date.now());
   emit({ t: "state", s: JSON.parse(JSON.stringify(S)) });
 }
+function markUsed(w) { if (w && !S.used.includes(w)) S.used.push(w); }
 function startGame() {
   const ids = presentIds();
   if (ids.length < 2) { sysMsg("2명 이상 있어야 시작할 수 있어요."); return; }
@@ -405,7 +450,8 @@ function startGame() {
   S.scores = {}; const names = {};
   for (const id of ids) { S.scores[id] = 0; names[id] = present[id].name; }
   S.names = names;
-  S.q = 0; S.drawCount = {}; S.lastDrawer = null; S.lastWinner = null;
+  S.q = 0; S.drawCount = {}; S.lastDrawer = null; S.lastWinner = null; S.used = [];
+  if (!S.cats || !S.cats.length) S.cats = [...CAT_KEYS];
   nextQuestion(false);
 }
 // 출제자 뽑기: 직전 출제자·직전 정답자 제외 → 그중 출제 횟수가 가장 적은 사람들 중 랜덤
@@ -427,7 +473,7 @@ function nextQuestion(redo) {
   S.qid++;
   S.drawerId = pickDrawer();
   S.drawCount[S.drawerId] = (S.drawCount[S.drawerId] || 0) + 1;
-  S.phase = "choosing"; S.wordLen = 0; S.word = null; S.winner = null; S.pts = 0; S.drawerPts = 0; S.endReason = null;
+  S.phase = "choosing"; S.wordLen = 0; S.word = null; S.cat = null; S.winner = null; S.pts = 0; S.drawerPts = 0; S.endReason = null;
   setTimer(CHOOSE_MS); pushState();
 }
 function endQuestion(reason) {
@@ -466,7 +512,7 @@ function handle(m) {
     }
     case "chosen":
       if (isHost && S.phase === "choosing" && m.qid === S.qid && m.from === S.drawerId) {
-        S.phase = "drawing"; S.wordLen = m.len; setTimer(S.drawTime * 1000); pushState();
+        S.phase = "drawing"; S.wordLen = m.len; S.cat = CATS[m.cat] ? m.cat : null; setTimer(S.drawTime * 1000); pushState();
       }
       break;
     case "guess":   // 출제자만 정답 판정 (제시어를 아는 건 그 사람뿐)
@@ -478,7 +524,7 @@ function handle(m) {
     case "correct":   // 방장이 첫 정답자 1명만 인정 → 점수 반영 → 즉시 문제 종료
       if (isHost && S.phase === "drawing" && m.qid === S.qid && !S.winner && present[m.from]) {
         const frac = Math.max(0, hostEnds - Date.now()) / (S.drawTime * 1000);
-        S.winner = m.from; S.word = m.word;
+        S.winner = m.from; S.word = m.word; markUsed(m.word);
         S.pts = 50 + Math.round(50 * frac); S.drawerPts = 20;
         S.scores[m.from] = (S.scores[m.from] || 0) + S.pts;
         S.scores[S.drawerId] = (S.scores[S.drawerId] || 0) + S.drawerPts;
@@ -486,7 +532,7 @@ function handle(m) {
       }
       break;
     case "reveal":   // 시간 초과일 때 출제자가 정답 공개
-      if (isHost && m.qid === S.qid && S.phase === "result" && !S.word) { S.word = m.word; pushState(); }
+      if (isHost && m.qid === S.qid && S.phase === "result" && !S.word) { S.word = m.word; markUsed(m.word); pushState(); }
       break;
     case "chat":
       addChat(m.from, m.name, m.text);
@@ -494,7 +540,11 @@ function handle(m) {
     case "draw": if (S && S.phase === "drawing" && m.qid === S.qid) drawSeg(m); break;
     case "clear": if (S && m.qid === S.qid) clearBoard(); break;
     case "settings":
-      if (isHost && S.phase === "lobby") { S.drawTime = m.drawTime; pushState(); }
+      if (isHost && S.phase === "lobby") {
+        if (m.drawTime) S.drawTime = m.drawTime;
+        if (Array.isArray(m.cats)) { const c = m.cats.filter((k) => CATS[k]); if (c.length) S.cats = c; }
+        pushState();
+      }
       break;
     case "start": if (isHost && (S.phase === "lobby" || S.phase === "gameOver")) startGame(); break;
     case "lobby": if (isHost) { S.phase = "lobby"; S.q = 0; for (const id in S.scores) S.scores[id] = 0; pushState(); } break;
@@ -582,7 +632,7 @@ cv.addEventListener("pointerup", stopDraw); cv.addEventListener("pointercancel",
 // 0.06초마다 모아서 한 번에 보내기 (메시지 수 아끼기)
 function flush() {
   if (buf.length === 0 || !canDraw()) { buf = []; return; }
-  net.send({ t: "draw", c: color, w: size, pts: buf, qid: S.qid });
+  net && net.send({ t: "draw", c: color, w: size, pts: buf, qid: S.qid });
   buf = drawing ? [buf[buf.length - 1]] : [];   // 다음 묶음이 이어지도록 마지막 점을 남김
 }
 setInterval(() => { if (drawing && buf.length > 1) flush(); }, 60);
@@ -634,10 +684,23 @@ function scorePop(id, pts) {
 }
 
 // ===================== 화면 그리기 =====================
-function pick3() { const a = [...WORDS]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a.slice(0, 3); }
-function chooseWord(w) {
-  if (!S || S.phase !== "choosing" || S.drawerId !== myId || (myWord && myWordQid === S.qid)) return;
-  myWord = w; myWordQid = S.qid; emit({ t: "chosen", from: myId, len: w.length, qid: S.qid }); render();
+// 고른 분야에서, 이번 게임에 이미 나온 단어는 빼고 3개 뽑기
+function pick3() {
+  const cats = (S.cats && S.cats.length ? S.cats : CAT_KEYS).filter((k) => CATS[k]);
+  const all = [], seen = new Set();
+  for (const k of cats) for (const w of CATS[k].words) if (!seen.has(w)) { seen.add(w); all.push({ w, cat: k }); }
+  let pool = all.filter((x) => !(S.used || []).includes(x.w));
+  if (pool.length < 3) pool = all;                       // 다 써 버렸으면 다시 처음부터
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  return pool.slice(0, 3);
+}
+function chooseWord(c) {
+  if (!S || !c || S.phase !== "choosing" || S.drawerId !== myId || (myWord && myWordQid === S.qid)) return;
+  myWord = c.w; myWordQid = S.qid; emit({ t: "chosen", from: myId, len: c.w.length, cat: c.cat, qid: S.qid }); render();
+}
+function catChips(editable) {
+  const on = S.cats || CAT_KEYS;
+  return `<div class="catlist">${CAT_KEYS.map((k) => `<button class="catchip ${on.includes(k) ? "on" : ""}" data-k="${k}" ${editable ? "" : "disabled"}>${esc(CATS[k].name)} <small>${CATS[k].words.length}</small></button>`).join("")}</div>`;
 }
 // 내용이 같으면 다시 그리지 않기 (버튼 누르는 중에 사라지는 것 방지)
 function setHTML(el, html) { if (el._h === html) return false; el._h = html; el.innerHTML = html; return true; }
@@ -649,12 +712,17 @@ function render() {
   const hostId = ids[0];
 
   // 플레이어 목록
-  setHTML($("players"), [...ids].sort((a, b) => sc(b) - sc(a)).map((id) => {
+  const sorted = [...ids].sort((a, b) => sc(b) - sc(a) || present[a].joinedAt - present[b].joinedAt);
+  const showRank = S && (S.phase !== "lobby" || sorted.some((id) => sc(id) > 0));
+  const rankOf = (id) => 1 + sorted.filter((x) => sc(x) > sc(id)).length;   // 동점이면 같은 등수
+  setHTML($("players"), sorted.map((id) => {
+    const r = rankOf(id), medal = ["🥇", "🥈", "🥉"][r - 1];
+    const rankHtml = showRank ? `<span class="rk ${r <= 3 ? "top" : ""}">${medal || r}</span>` : "";
     const isDrawer = inGame && S.drawerId === id, isWinner = inGame && S.phase === "result" && S.winner === id;
     const cls = [isDrawer ? "drawer" : "", isWinner ? "winner" : "", id === myId ? "me" : ""].join(" ");
     const tags = [isDrawer ? '<span class="tag t-draw">✏️ 출제자</span>' : "", isWinner ? '<span class="tag t-win">🎉 정답!</span>' : "",
       id === hostId ? '<span class="tag t-host">👑 방장</span>' : "", id === myId ? '<span class="tag">나</span>' : ""].join("");
-    return `<li class="${cls}" data-id="${id}">${avatar(id, present[id].name)}<div class="pinfo"><div class="pname">${esc(present[id].name)}</div><div class="tags">${tags}</div></div><span class="pscore">${sc(id)}</span></li>`;
+    return `<li class="${cls}" data-id="${id}">${rankHtml}${avatar(id, present[id].name)}<div class="pinfo"><div class="pname">${esc(present[id].name)}</div><div class="tags">${tags}</div></div><span class="pscore">${sc(id)}</span></li>`;
   }).join(""));
 
   const ov = $("overlay");
@@ -682,6 +750,8 @@ function render() {
   else if (S.phase === "drawing") hint.innerHTML = Array(S.wordLen).fill("<span></span>").join("");
   else if (S.phase === "result" && S.word) { hint.classList.add("reveal"); hint.innerHTML = [...S.word].map((c) => `<span>${esc(c)}</span>`).join(""); }
   else hint.innerHTML = "";
+  if ((S.phase === "drawing" || S.phase === "result") && S.cat && CATS[S.cat]) $("catInfo").innerHTML = `<span class="cattag">분야: ${esc(CATS[S.cat].name)}</span>`;
+  else $("catInfo").innerHTML = "";
 
   $("tools").classList.toggle("hidden", !canDraw());
   cv.classList.toggle("can", canDraw());
@@ -694,14 +764,21 @@ function render() {
     if (isHost) {
       if (setHTML(ov, `<div class="bigicon">🎨</div><h2>대기실</h2><p>${ids.length}명 접속 중 · 2명 이상이면 시작할 수 있어요</p>${list}
         <div class="settings">📝 총 <b>${TOTAL_Q}</b>문제 · ⏱️ 제한 시간 <select id="setT">${[60, 80, 100, 120].map((n) => `<option ${n === S.drawTime ? "selected" : ""}>${n}</option>`).join("")}</select>초</div>
+        <p>📚 문제 분야 (눌러서 켜고 끄기 · 여러 개 가능)</p>${catChips(true)}
         <button id="startBtn" class="primary" ${ids.length < 2 ? "disabled" : ""}>게임 시작!</button>`)) {
       $("setT").onchange = () => emit({ t: "settings", drawTime: +$("setT").value });
+      ov.querySelectorAll(".catchip").forEach((b) => b.onclick = () => {
+        const k = b.dataset.k, cur = S.cats || [];
+        const next = cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k];
+        if (!next.length) { sysMsg("분야는 최소 1개는 골라야 해요."); return; }
+        emit({ t: "settings", cats: next });
+      });
       $("startBtn").onclick = () => emit({ t: "start" }); }
-    } else setHTML(ov, `<div class="bigicon">🎨</div><h2>대기실</h2><p>${ids.length}명 접속 중 · 방장(👑)이 시작하길 기다리는 중...</p>${list}<div class="settings">📝 총 <b>${TOTAL_Q}</b>문제 · ⏱️ 제한 시간 <b>${S.drawTime}</b>초</div>`);
+    } else setHTML(ov, `<div class="bigicon">🎨</div><h2>대기실</h2><p>${ids.length}명 접속 중 · 방장(👑)이 시작하길 기다리는 중...</p>${list}<div class="settings">📝 총 <b>${TOTAL_Q}</b>문제 · ⏱️ 제한 시간 <b>${S.drawTime}</b>초</div><p>📚 문제 분야 (방장이 정해요)</p>${catChips(false)}`);
   } else if (S.phase === "choosing") {
     if (amDrawer && !(myWord && myWordQid === S.qid)) {
       if (choseForQid !== S.qid) { choseForQid = S.qid; myChoices = pick3(); }
-      if (setHTML(ov, `<div class="bigicon">✏️</div><h2>내가 출제자! 그릴 단어를 골라요</h2><div class="choices">${myChoices.map((w, i) => `<button class="wordbtn" data-i="${i}">${esc(w)}</button>`).join("")}</div><p>시간 안에 안 고르면 첫 번째 단어로 정해져요</p><!--${S.qid}-->`))
+      if (setHTML(ov, `<div class="bigicon">✏️</div><h2>내가 출제자! 그릴 단어를 골라요</h2><div class="choices">${myChoices.map((c, i) => `<button class="wordbtn" data-i="${i}">${esc(c.w)}<small>${esc(CATS[c.cat].name)}</small></button>`).join("")}</div><p>시간 안에 안 고르면 첫 번째 단어로 정해져요</p><!--${S.qid}-->`))
         ov.querySelectorAll(".wordbtn").forEach((b) => b.onclick = () => chooseWord(myChoices[+b.dataset.i]));
     } else setHTML(ov, `<div class="lobbyplayers"><div class="lp">${avatar(S.drawerId, nameOf(S.drawerId))}</div></div><h2>${esc(nameOf(S.drawerId))}님이 단어를 고르는 중...</h2><p>문제 ${S.q} / ${S.totalQ}</p>`);
   } else if (S.phase === "drawing") {
