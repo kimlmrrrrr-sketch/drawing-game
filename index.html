@@ -54,6 +54,15 @@
   #join .row { display: flex; gap: 12px; margin-top: 24px; }
   #join .row > * { flex: 1; padding: 12px; font-family: var(--display); font-size: 20px; }
   #join .deco { position: absolute; font-size: 30px; }
+  .watchbtn { width: 100%; margin-top: 12px; font-size: 15px; background: var(--sky-soft); }
+  .speclist { padding: 0 14px 14px; font-size: 13px; color: var(--muted); }
+  .speclist .st { font-family: var(--display); font-size: 16px; color: var(--ink); margin-bottom: 6px; }
+  .speclist .sp { display: inline-flex; align-items: center; gap: 4px; background: var(--sky-soft); border: 2px solid var(--ink); border-radius: 999px; padding: 1px 10px 1px 2px; margin: 0 4px 6px 0; font-weight: 800; color: var(--ink); }
+  .speclist .sp .avatar { width: 24px; height: 24px; font-size: 13px; border-width: 1px; }
+  .lobbyspec { font-size: 14px; color: var(--muted); }
+  .togglebtn { font-size: 14px; padding: 6px 14px; background: var(--sky-soft); }
+  .spectag { font-size: 11px; background: var(--sky-soft); border: 1px solid var(--ink); border-radius: 999px; padding: 0 6px; margin-right: 4px; color: var(--ink); }
+  .specbadge { display: inline-block; font-family: var(--display); background: var(--sky); border: 2px solid var(--ink); border-radius: 999px; padding: 1px 10px; font-size: 14px; }
 
   /* ---------- 게임 화면 ---------- */
   #game { max-width: 1280px; margin: 0 auto; padding: 16px 16px 28px; }
@@ -238,6 +247,7 @@
     <button id="createBtn" class="primary">방 만들기</button>
     <button id="enterBtn">입장하기</button>
   </div>
+  <button id="watchBtn" class="watchbtn">👀 보기만 할래요 (관전으로 입장)</button>
 </section>
 
 <!-- 2) 게임 화면 -->
@@ -264,6 +274,7 @@
     <div class="card">
       <div class="panel-title">🏆 순위표</div>
       <ul id="players"></ul>
+      <div id="specList" class="speclist"></div>
     </div>
     <div class="card stagecard">
       <div id="lobbyPanel" class="lobby hidden"></div>
@@ -314,7 +325,12 @@ const CATS = {
     유니콘 용 봉황 치와와 푸들 진돗개 불독 닥스훈트 허스키 하이에나 미어캣 라쿤 족제비 오소리 아르마딜로 몽구스 바다거북 큰부리새
     콘도르 키위새 도도새 꾀꼬리 뻐꾸기 두루미 황새 왜가리 오리너구리 날다람쥐 북극여우 사막여우 눈표범 흑표범 퓨마 들소 야크 라마
     코요테 바다코끼리 일각고래 혹등고래 고래상어 망치상어 해삼 멍게 전복 가리비 홍합 대게 소라게 말미잘 산호 열대어 아귀 갈치
-    꽁치 피라냐 송사리 미꾸라지 하늘소 소금쟁이 물방개 벼룩 애벌레 번데기 누에 벌집 거미줄 새둥지 공룡알 트리케라톱스 스테고사우루스 익룡` },
+    꽁치 피라냐 송사리 미꾸라지 하늘소 소금쟁이 물방개 벼룩 애벌레 번데기 누에 벌집 거미줄 새둥지 공룡알 트리케라톱스 스테고사우루스 익룡
+    기러기 청둥오리 원앙 카나리아 문조 잉꼬 수리부엉이 황조롱이 솔개 물총새 바다표범 북극늑대 아기곰 재규어 스라소니 살쾡이 담비 페럿
+    친칠라 아나콘다 방울뱀 비단뱀 청개구리 황소개구리 맹꽁이 물장군 하루살이 초파리 쇠똥구리 집게벌레 땅강아지 여치 방아깨비 베짱이 호박벌 타란툴라
+    노래기 공벌레 쥐며느리 민달팽이 거머리 갯지렁이 주꾸미 갑오징어 꼴뚜기 해달 물범 듀공 매너티 벨루가 곰치 개복치 날치 참돔
+    광어 우럭 멸치 정어리 송어 붕어 가물치 벨로시랩터 안킬로사우루스 스피노사우루스 브라키오사우루스 시츄 말티즈 비숑 포메라니안 웰시코기 비글 리트리버
+    셰퍼드 도베르만 삽살개 샴고양이 망아지 송아지 새끼돼지 흑염소 오골계 메추라기 꿩` },
   nature: { name: "🌈 자연·우주", words: `
     태양 초승달 보름달 반달 별 구름 먹구름 비 소나기 장마 눈송이 함박눈 무지개 번개 천둥 바람 회오리바람 태풍
     토네이도 안개 서리 이슬 우박 화산 용암 산 산봉우리 언덕 절벽 계곡 바다 강 시냇물 호수 연못 폭포
@@ -323,7 +339,12 @@ const CATS = {
     단풍 도토리 솔방울 씨앗 새싹 뿌리 열매 꽃다발 화환 얼음 빙하 빙산 고드름 눈사태 파도 해일 모래 모래성
     갯벌 조약돌 바위 자갈 진흙 웅덩이 지구 달 해 은하수 별똥별 혜성 행성 토성 목성 화성 블랙홀 우주
     인공위성 운석 일출 일몰 노을 일식 월식 지진 오로라 북극 남극 봄 여름 가을 겨울 아침 밤 새벽
-    그림자 불 모닥불 연기 산불 홍수 가뭄 별자리 북두칠성 은행잎 버드나무 갈대 수련 허브 꽃잎 꽃봉오리` },
+    그림자 불 모닥불 연기 산불 홍수 가뭄 별자리 북두칠성 은행잎 버드나무 갈대 수련 허브 꽃잎 꽃봉오리 라벤더 수국
+    안개꽃 프리지아 데이지 철쭉 동백꽃 매화 목련 들국화 할미꽃 제비꽃 채송화 봉숭아 맨드라미 엉겅퀴 강아지풀 토끼풀 쑥 자작나무
+    전나무 느티나무 참나무 벚나무 사과나무 감나무 밤나무 소라껍데기 진주 조개껍데기 뭉게구름 이슬비 장대비 눈보라 진눈깨비 소용돌이 물결 썰물
+    밀물 해변 백사장 암초 산호초 협곡 평야 들판 논 밭 과수원 오솔길 숲속 호숫가 강가 바닷가 산꼭대기 종유석
+    크레이터 은하 태양계 수성 금성 천왕성 해왕성 명왕성 달무리 해돋이 해넘이 눈꽃 상고대 빙판 낙엽더미 무지개빛 바람개비 연잎
+    이끼바위 통나무 그루터기 나뭇가지 나뭇잎 단풍잎` },
   food: { name: "🍔 음식", words: `
     사과 배 바나나 포도 청포도 수박 참외 멜론 딸기 블루베리 복숭아 자두 살구 귤 오렌지 한라봉 자몽 레몬
     라임 파인애플 체리 망고 키위 감 홍시 곶감 석류 무화과 코코넛 아보카도 용과 호두 땅콩 당근 무 배추
@@ -343,7 +364,13 @@ const CATS = {
     젤라또 셔벗 파르페 마들렌 스콘 브라우니 타르트 파이 호두파이 호두과자 국화빵 뻥튀기 강냉이 엿 달고나 곤약젤리 양갱 경단
     가래떡 시루떡 꿀떡 무지개떡 매실차 유자차 보리차 밀크티 카푸치노 아이스티 두유 바나나우유 딸기우유 초코우유 산딸기 매실 유자 대추
     리치 파파야 라즈베리 아스파라거스 셀러리 비트 콜리플라워 양상추 케일 청경채 부추 미나리 고사리 도라지 인삼 표고버섯 팽이버섯 콩
-    완두콩 강낭콩 팥 땅콩버터 피자빵 소금빵 꽃빵 쌀과자 오징어땅콩 팝콘치킨 순살치킨 물냉면 비빔냉면 잔치국수 쫄면` },
+    완두콩 강낭콩 팥 땅콩버터 피자빵 소금빵 꽃빵 쌀과자 오징어땅콩 팝콘치킨 순살치킨 물냉면 비빔냉면 잔치국수 쫄면 생크림케이크 초코케이크 딸기케이크
+    아이스크림케이크 크레페 꿀호떡 씨앗호떡 길거리토스트 프렌치토스트 샐러드 과일샐러드 그릭요거트 수박화채 자몽에이드 청포도에이드 녹차라떼 딸기라떼 고구마라떼 초코라떼 망고스무디 슬러시
+    망고빙수 인절미빙수 소프트아이스크림 아이스캔디 김치전 부추전 해물파전 떡갈비 수육 육회 비빔국수 콩국수 막국수 어묵탕 만둣국 갈비찜 장조림 멸치볶음
+    계란찜 콩나물국 북엇국 된장국 청국장 쌈밥 김치찜 오징어볶음 곱창 막창 닭발 회덮밥 알밥 돌솥비빔밥 꼬마김밥 참치김밥 치즈김밥 삼각김밥
+    튀김우동 짜장밥 짬뽕밥 마파두부 깐풍기 유린기 양장피 고추잡채 오믈렛 스크램블에그 해시브라운 클럽샌드위치 미트볼 피시앤칩스 까르보나라 알리오올리오 뇨끼 라비올리
+    마카로니 페퍼로니피자 하와이안피자 불고기피자 포테이토피자 고르곤졸라 함박스테이크 치즈돈가스 생선가스 오코노미야키 타코야키 야키소바 규카츠 연어덮밥 장어덮밥 군만두 물만두 왕만두
+    김치만두 찐만두 호박엿 누룽지사탕 박하사탕 솜사탕기계 초코파이 아몬드 캐슈넛 해바라기씨 건포도 말린망고` },
   thing: { name: "🧸 물건·옷", words: `
     칫솔 치약 비누 샴푸 수건 거울 빗 드라이기 면도기 우산 안경 선글라스 손목시계 알람시계 열쇠 지갑 가방 배낭
     캐리어 휴대폰 이어폰 헤드폰 충전기 노트북 컴퓨터 모니터 키보드 마우스 프린터 텔레비전 리모컨 라디오 스피커 마이크 냉장고 세탁기
@@ -362,7 +389,13 @@ const CATS = {
     조이스틱 셀카봉 삼각대 콘센트 멀티탭 건전지 로봇청소기 가습기 공기청정기 전기장판 난로 식탁 화장대 책장 매트리스 해먹 흔들의자 이층침대
     요람 모빌 장난감상자 렌치 펜치 줄자 도끼 곡괭이 갈퀴 호스 페인트 롤러 우체통 쇼핑백 영수증 신문 잡지 엽서
     초대장 티켓 여권 열쇠고리 배지 스티커 도장 후드티 니트 스웨터 가디건 멜빵바지 레깅스 트레이닝복 교복 군복 우주복 잠수복
-    턱시도 웨딩드레스 망토 베레모 밀짚모자 털모자 귀마개 스카프 손수건 스타킹 부츠 고무신 머리핀 머리끈` },
+    턱시도 웨딩드레스 망토 베레모 밀짚모자 털모자 귀마개 스카프 손수건 스타킹 부츠 고무신 머리핀 머리끈 연필꽂이 책꽂이 책받침 클립보드
+    바인더 스탬프 다이어리 수첩 메모지 편지지 색종이 도화지 팔레트 이젤 캔버스 자석 온도계 블라인드 방석 카펫 발매트 신발주걱
+    빨래건조대 행거 전신거울 각티슈 쓰레기봉투 고무줄 비닐봉지 지퍼백 키친타월 수세미 행주 세제 방향제 모기향 파리채 모기장 부채 손풍기
+    장난감자동차 미니카 무선조종자동차 인형의집 블록 큐브 공 축구공 농구공 배구공 야구공 테니스공 탁구공 셔틀콕 야구방망이 글러브 라켓 골프채
+    핸드백 크로스백 에코백 서류가방 양산 손목밴드 넥워머 전화기 무전기 카세트테이프 레코드판 축음기 빔프로젝터 고데기 전동칫솔 안마의자 손난로 핫팩
+    보온물주머니 돗자리 텐트팩 랜턴 버너 코펠 아이스박스 보냉백 물안경 수영모 튜브 구명조끼 오리발 스노클 선풍기날개 화장솜 빗자루세트 열쇠구멍
+    문패 명함 사원증 학생증 도서관카드` },
   place: { name: "🚗 탈것·장소", words: `
     자동차 버스 택시 트럭 기차 지하철 비행기 헬리콥터 요트 유람선 잠수함 로켓 우주선 자전거 오토바이 킥보드 스케이트보드 유모차
     휠체어 구급차 소방차 경찰차 포크레인 덤프트럭 레미콘 트랙터 열기구 낙하산 케이블카 롤러코스터 썰매 뗏목 카누 보트 마차 탱크
@@ -376,7 +409,12 @@ const CATS = {
     꽃집 문구점 서점 안경점 주차장 고속도로 휴게소 톨게이트 지하철역 버스터미널 낚시터 스케이트장 육교 옥상 다락방 지하실 베란다 마당
     정원 온실 비닐하우스 헛간 외양간 닭장 개집 새장 어항 광장 시계탑 동상 성벽 탑 유치원 교무실 보건실 급식실
     강당 과학실 음악실 빌딩 고층빌딩 사막마을 오두막 통나무집 성당 등산로 놀이동산 매표소 공중전화 버스킹무대 무대 경기장 우주기지 비밀기지
-    보물섬 유령의집` },
+    보물섬 유령의집 활주로 관제탑 승강장 개찰구 기찻길 건널목 교차로 로터리 고가도로 지하상가 세차장 정비소 피사의사탑 콜로세움 타지마할 빅벤
+    오페라하우스 스핑크스 모아이석상 첨성대 남대문 경복궁 석굴암 불국사 다보탑 펜션 리조트 민박 게스트하우스 기숙사 원룸 단독주택 초가집 기와집
+    움집 성곽 요새 구청 주민센터 보건소 파출소 과학관 천문대 기상대 정육점 생선가게 과일가게 채소가게 떡집 치킨집 피자가게 분식집
+    중국집 고깃집 횟집 포장마차 푸드트럭 아이스크림가게 사진관 옷가게 신발가게 장난감가게 동물병원 치과 한의원 식물원 테마파크 눈썰매장 승마장 골프장
+    테니스장 목욕탕 공연장 콘서트장 거북선 마을버스 고속버스 시내버스 트램 화물열차 기관차 잠수정 쇄빙선 크루즈 나룻배 통통배 카약 행글라이더
+    경운기 이앙기 콤바인 전동킥보드 우주탐사선 달착륙선 인공섬 등대섬 해적섬 성탑 마법학교 과자집 사탕나라 장난감공장` },
   job: { name: "🧑‍🍳 직업·인물", words: `
     의사 간호사 치과의사 경찰 소방관 선생님 요리사 가수 아이돌 배우 화가 작가 기자 군인 우주비행사 과학자 프로그래머 마술사
     광대 농부 어부 목수 미용사 택배기사 우체부 조종사 승무원 축구선수 야구선수 판사 변호사 약사 수의사 사진작가 디자이너 유튜버
@@ -389,7 +427,12 @@ const CATS = {
     도깨비 구미호 산신령 선녀 나무꾼 엄마 아빠 형 누나 언니 오빠 동생 삼촌 이모 고모 가족 신생아 꼬마
     청소년 어르신 소방대원 마을버스기사 택시기사 트럭운전사 크레인기사 잠수부 산악인 등산객 관광객 캠퍼 낚시꾼 사냥꾼 목동 양치기 수녀 스님
     웹툰작가 게이머 프로게이머 스트리머 마라톤선수 수영선수 체조선수 권투선수 씨름선수 골키퍼 투수 포수 응원단장 반장 전학생 짝꿍 담임선생님 교장선생님
-    경비아저씨 우유배달원` },
+    경비아저씨 우유배달원 기관사 항해사 관제사 역무원 교통경찰 구급대원 응급구조사 소아과의사 외과의사 영양사 급식조리사 사회복지사 보육교사 유치원선생님 학원선생님 강사
+    리포터 앵커 시인 소설가 만화가 일러스트레이터 애니메이터 양봉가 등대지기 대장장이 구두장이 재단사 패션디자이너 플로리스트 감독 골프선수 테니스선수 배구선수
+    농구선수 피겨선수 스키선수 양궁선수 펜싱선수 레슬러 마왕 용사 궁수 전사 엘프 거인 난쟁이 트롤 고블린 미라 늑대인간 저승사자
+    왕비 신하 궁녀 선비 양반 포졸 아저씨 아줌마 손자 손녀 신혼부부 커플 남매 형제 자매 이웃 청소년상담사 숲해설가
+    동물조련사 유치원원장 교감선생님 보안관 우주인 로봇공학자 해커 경매사 쇼호스트 마라토너 보디빌더 헬스트레이너 요가강사 수영강사 스키강사 피아노선생님 미술선생님 체육선생님
+    음악선생님` },
   play: { name: "⚽ 놀이·스포츠", words: `
     축구 야구 농구 배구 족구 테니스 탁구 배드민턴 골프 볼링 당구 수영 다이빙 스키 스케이트 피겨스케이팅 스노보드 서핑
     수상스키 낚시 등산 캠핑 줄넘기 태권도 유도 권투 씨름 레슬링 양궁 사격 펜싱 체조 마라톤 요가 줄다리기 이어달리기
@@ -399,7 +442,12 @@ const CATS = {
     사방치기 땅따먹기 수건돌리기 꼬리잡기 닭싸움 얼음땡 동굴탐험 보물찾기 훌라후프 공중제비 텀블링 롤러스케이트 인라인스케이트 스쿼시 핸드볼 하키 소프트볼 크리켓
     카누타기 래프팅 패러글라이딩 번지점프 스카이다이빙 스쿠버다이빙 철봉 평균대 뜀틀 투포환 멀리뛰기 높이뛰기 허들 계주 줄넘기대회 팔씨름대회 피구 발야구
     술래잡기 숨바꼭질 가위바위보 그네타기 미끄럼틀 시소 정글짐 모래성쌓기 눈사람만들기 썰매타기 연못낚시 캠프파이어 바비큐파티 생일파티 소풍 피크닉 댄스 마술쇼
-    비눗방울놀이 풍선아트 슬라임 클레이 색칠놀이 스티커붙이기 퍼즐맞추기 카드게임 주사위게임 숨은그림찾기 끝말잇기 스무고개` },
+    비눗방울놀이 풍선아트 슬라임 클레이 색칠놀이 스티커붙이기 퍼즐맞추기 카드게임 주사위게임 숨은그림찾기 끝말잇기 스무고개 페널티킥 홈런 덩크슛 스파이크 서브 스매시
+    홀인원 스트라이크 골인 태클 패스 슛 드리블 헤딩 오버헤드킥 삼점슛 자유투 만루홈런 도루 번트 하이킹 트레킹 조깅 자전거타기
+    스케이트보드타기 바다낚시 얼음낚시 글램핑 차박 서예 캘리그라피 도자기만들기 목공 레고조립 프라모델 비즈공예 십자수 자수 꽃꽂이 정원가꾸기 식물키우기 베이킹
+    악기연주 밴드 합창 오케스트라 저글링 큐브맞추기 트라이앵글 캐스터네츠 장구 북 꽹과리 징 가야금 거문고 단소 대금 피리 하프
+    색소폰 클라리넷 오보에 튜바 호른 우쿨렐레 전자기타 베이스기타 핼러윈 크리스마스 설날 추석 어린이날 발렌타인데이 수학여행 체육대회 학예회 장기자랑
+    마피아게임 진실게임 눈치게임 줄넘기놀이 공놀이 술래 깃발뺏기 박터뜨리기 이인삼각 물풍선놀이 눈썰매 연날리기대회 가면무도회 코스프레 퀴즈대회 노래자랑` },
   action: { name: "🤸 몸·행동", words: `
     눈 코 입 귀 이빨 혀 손 발 손가락 발가락 손톱 머리카락 수염 눈썹 속눈썹 배꼽 무릎 팔꿈치
     어깨 엉덩이 뼈 해골 심장 뇌 근육 땀 눈물 콧물 하트 양치질 세수 샤워 목욕 설거지 청소 빨래
@@ -409,7 +457,12 @@ const CATS = {
     잠수 노크 장보기 빵굽기 김장 바느질 다림질 엄지척 브이 손하트 꿀밤 간지럼 업어주기 목마 무릎꿇기 귓속말 고백 이별
     응원 행복 슬픔 부끄러움 무서움 졸림 배고픔 배부름 심심함 두근두근 사랑 감동 긴장 절하기 세배 인사 큰절 팔짱
     어깨동무 손잡기 신발끈묶기 넥타이매기 머리빗기 손톱깎기 양말신기 옷입기 요리 설거지하기 걸레질 이불개기 분리수거 물주기 산책시키기 사진찍기 그림감상 편지쓰기
-    일기쓰기 독서하기 전화받기 문자보내기 택배받기 줄넘기하기 휘파람 노래부르기 춤추기 손뼉치기 발구르기 꾸벅꾸벅 기절 쓰러짐 미끄러짐` },
+    일기쓰기 독서하기 전화받기 문자보내기 택배받기 줄넘기하기 휘파람 노래부르기 춤추기 손뼉치기 발구르기 꾸벅꾸벅 기절 쓰러짐 미끄러짐 깡충깡충 뒤뚱뒤뚱 엉금엉금
+    살금살금 두리번두리번 엉엉 깔깔 쿨쿨 쿵쾅 메롱 삐짐 뽀뽀 하이킥 앞구르기 뒤구르기 옆돌기 다리찢기 팔벌려뛰기 제자리뛰기 기쁨 짜증
+    당황 걱정 외로움 자신감 실망 후회 억울함 신남 설렘 반함 늦잠 지각 등교 하교 퇴근 야근 회의 발표
+    필기 계산 이마 볼 턱 목 가슴 등 허리 팔 발목 손목 손바닥 발바닥 주먹 보조개 주근깨 여드름
+    콧구멍 고양이세수 손흔들기 고개끄덕 고개젓기 어깨으쓱 눈흘김 째려보기 하품하기 기지개켜기 침흘리기 코파기 머리긁기 손톱물어뜯기 다리떨기 발가락꼼지락 박수치기 환호
+    만세 승리포즈 기도손 생각중 멍때리기 졸다가깜짝` },
 };
 for (const k in CATS) CATS[k].words = [...new Set(CATS[k].words.split(/\s+/).filter(Boolean))];
 const CAT_KEYS = Object.keys(CATS);
@@ -455,29 +508,30 @@ function makeSupabaseNet(room) {
   ch.on("broadcast", { event: "m" }, ({ payload }) => api.msgFn && api.msgFn(payload));
   ch.on("presence", { event: "sync" }, () => {
     const st = ch.presenceState(), list = {};
-    for (const id in st) { const p = st[id][0]; if (p) list[id] = { name: p.name, joinedAt: p.joinedAt }; }
+    for (const id in st) { const p = st[id][st[id].length - 1]; if (p) list[id] = { name: p.name, joinedAt: p.joinedAt, spec: !!p.spec }; }
     api.presFn && api.presFn(list);
   });
   ch.subscribe(async (status) => {
-    if (status === "SUBSCRIBED") { await ch.track({ name: myName, joinedAt }); api.ready && api.ready(); }
+    if (status === "SUBSCRIBED") { await ch.track({ name: myName, joinedAt, spec: mySpec }); api.ready && api.ready(); }
     if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") sysMsg("서버 연결 문제가 생겼어요. 새로고침해 보세요.");
   });
   api.send = (msg) => { if (!api.closed) ch.send({ type: "broadcast", event: "m", payload: msg }); };
+  api.retrack = () => { if (!api.closed) ch.track({ name: myName, joinedAt, spec: mySpec }); };
   api.leave = () => { api.closed = true; api.msgFn = api.presFn = api.ready = null; ch.untrack().catch(() => {}); client.removeChannel(ch); };
   return api;
 }
 function makeLocalNet(room) {
   const bc = new BroadcastChannel("draw-" + room);
   const api = { msgFn: null, presFn: null }, seen = {};
-  const me = () => ({ id: myId, name: myName, joinedAt });
+  const me = () => ({ id: myId, name: myName, joinedAt, spec: mySpec });
   const emitPres = () => {
-    const now = Date.now(), list = { [myId]: { name: myName, joinedAt } };
+    const now = Date.now(), list = { [myId]: { name: myName, joinedAt, spec: mySpec } };
     for (const id in seen) if (now - seen[id].t < 5000) list[id] = seen[id].p; else delete seen[id];
     api.presFn && api.presFn(list);
   };
   bc.onmessage = (e) => {
     const m = e.data;
-    if (m.__ping) { const isNew = !seen[m.p.id]; seen[m.p.id] = { p: { name: m.p.name, joinedAt: m.p.joinedAt }, t: Date.now() }; if (isNew) { bc.postMessage({ __ping: 1, p: me() }); emitPres(); } return; }
+    if (m.__ping) { const isNew = !seen[m.p.id]; seen[m.p.id] = { p: { name: m.p.name, joinedAt: m.p.joinedAt, spec: !!m.p.spec }, t: Date.now() }; if (isNew) { bc.postMessage({ __ping: 1, p: me() }); emitPres(); } return; }
     if (m.__bye) { delete seen[m.id]; emitPres(); return; }
     api.msgFn && api.msgFn(m);
   };
@@ -486,6 +540,7 @@ function makeLocalNet(room) {
   addEventListener("beforeunload", bye);
   setTimeout(() => { if (api.closed) return; bc.postMessage({ __ping: 1, p: me() }); emitPres(); api.ready && api.ready(); }, 50);
   api.send = (msg) => { if (!api.closed) bc.postMessage(msg); };
+  api.retrack = () => { if (!api.closed) { bc.postMessage({ __ping: 1, p: me() }); emitPres(); } };
   api.leave = () => { api.closed = true; api.msgFn = api.presFn = api.ready = null; clearInterval(iv); bye(); removeEventListener("beforeunload", bye); bc.close(); };
   return api;
 }
@@ -500,13 +555,14 @@ if (params.get("room")) $("roomInput").value = params.get("room");
 try { $("nameInput").value = localStorage.getItem("drawName") || ""; } catch (e) {}
 
 let joinMode = "join";   // "create"(방 만들기) 또는 "join"(입장하기)
-function enter(code, mode) {
+let mySpec = false;      // 관전 모드면 true (그리기·정답·점수에 안 들어감)
+function enter(code, mode, spec) {
   myName = $("nameInput").value.trim();
   if (!myName) { alertBox("닉네임을 입력해 주세요"); return; }
   code = code.trim().toUpperCase();   // 영어 대소문자 구분 없이 같은 방
   if (!code && mode === "create") code = Array.from({ length: 4 }, () => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random() * 32)]).join("");
   if (!/^[A-Z0-9]{2,12}$/.test(code)) { alertBox("방 번호는 영어나 숫자로 2~12자예요 (띄어쓰기·특수문자 X)"); return; }
-  joinMode = mode;
+  joinMode = mode; mySpec = !!spec;
   joinedAt = Date.now();
   try { localStorage.setItem("drawName", myName); } catch (e) {}
   roomCode = code;
@@ -528,6 +584,7 @@ function enter(code, mode) {
       settled = true; onPresence(present);
     }, 2000);
     net.send({ t: "hello", from: myId });
+    if (mySpec) sysMsg("👀 관전으로 들어왔어요. 그림과 채팅은 볼 수 있지만 정답·점수에는 참여하지 않아요.");
     sysMsg(joinMode === "create" ? `'${code}' 방을 만들었어요. 친구에게 방 번호나 초대 링크를 알려 주세요!` : `'${code}' 방에 들어왔어요.`);
   };
   render();
@@ -544,6 +601,7 @@ function leaveRoom(msg) {
 function alertBox(t) { const p = $("join").querySelector(".sub"); p.textContent = "⚠️ " + t; p.classList.add("err"); }
 $("createBtn").onclick = () => enter($("roomInput").value, "create");
 $("enterBtn").onclick = () => enter($("roomInput").value, "join");
+$("watchBtn").onclick = () => enter($("roomInput").value, "join", true);
 $("roomInput").addEventListener("keydown", (e) => { if (e.key === "Enter") enter($("roomInput").value, "join"); });
 $("copyBtn").onclick = async () => {
   const url = location.origin + location.pathname + "?room=" + roomCode;
@@ -553,20 +611,19 @@ $("copyBtn").onclick = async () => {
 // ===================== 접속자 / 방장 정하기 =====================
 // 가장 먼저 들어온 사람이 방장. 방장이 나가면 다음 사람이 이어받아요.
 function onPresence(list) {
-  const before = Object.keys(present).sort().join();
   const prevPresent = present;
   present = list;
   // 퇴장 알림
   for (const id in prevPresent) if (!present[id] && settled) sysMsg(`${prevPresent[id].name}님이 나갔어요.`);
   for (const id in present) if (!prevPresent[id] && id !== myId && settled) sysMsg(`${present[id].name}님이 들어왔어요.`);
-  const ids = presentIds();
   const wasHost = isHost;
-  isHost = settled && ids[0] === myId;
+  isHost = settled && hostOrder()[0] === myId;
   if (isHost) {
     if (!S) S = newLobby();
-    for (const id of ids) { S.names[id] = present[id].name; if (!(id in S.scores)) S.scores[id] = 0; }
+    for (const id of playerIds()) { S.names[id] = present[id].name; if (!(id in S.scores)) S.scores[id] = 0; }
     if (!wasHost) { sysMsg("👑 내가 방장이 됐어요."); hostEnds = localEnds || Date.now(); }
-    if (before !== Object.keys(present).sort().join() || !wasHost) pushState();
+    const sig = (o) => Object.keys(o).sort().map((k) => k + (o[k].spec ? "s" : "p")).join();
+    if (sig(prevPresent) !== sig(present) || !wasHost) pushState();
   }
   render();
 }
@@ -576,6 +633,15 @@ function newLobby() {
     cats: [...CAT_KEYS], cat: null, used: [] };
 }
 function presentIds() { return Object.keys(present).sort((a, b) => present[a].joinedAt - present[b].joinedAt || (a < b ? -1 : 1)); }
+function playerIds() { return presentIds().filter((id) => !present[id].spec); }   // 게임 참가자
+function specIds() { return presentIds().filter((id) => present[id].spec); }      // 관전자
+function hostOrder() { return [...playerIds(), ...specIds()]; }                     // 방장: 먼저 들어온 참가자 (참가자가 없으면 관전자)
+function isPlayer(id) { return !!present[id] && !present[id].spec; }
+function setSpectator(v) {   // 대기실에서 관전 ↔ 참가 바꾸기
+  if (!net || !S || (S.phase !== "lobby" && S.phase !== "gameOver")) return;
+  mySpec = v; net.retrack && net.retrack();
+  sysMsg(v ? "👀 관전으로 바꿨어요." : "🙋 참가자로 바꿨어요.");
+}
 
 // ===================== 방장 전용: 게임 진행 =====================
 // 방장 컴퓨터 한 대만 결정(출제자 뽑기·점수·다음 문제)하고, 결과를 state로 모두에게 뿌려요.
@@ -588,8 +654,8 @@ function pushState() {
 }
 function markUsed(w) { if (w && !S.used.includes(w)) S.used.push(w); }
 function startGame() {
-  const ids = presentIds();
-  if (ids.length < 2) { sysMsg("2명 이상 있어야 시작할 수 있어요."); return; }
+  const ids = playerIds();
+  if (ids.length < 2) { sysMsg("참가자가 2명 이상 있어야 시작할 수 있어요. (관전자는 빼고)"); return; }
   // 지금 있는 사람만 점수판에 남기고 0점으로
   S.scores = {}; const names = {};
   for (const id of ids) { S.scores[id] = 0; names[id] = present[id].name; }
@@ -600,7 +666,7 @@ function startGame() {
 }
 // 출제자 뽑기: 직전 출제자·직전 정답자 제외 → 그중 출제 횟수가 가장 적은 사람들 중 랜덤
 function pickDrawer() {
-  const ids = presentIds();
+  const ids = playerIds();
   let cand = ids.filter((id) => id !== S.lastDrawer && id !== S.lastWinner);
   if (cand.length === 0) cand = ids.filter((id) => id !== S.lastDrawer);   // 예외: 후보가 없으면 직전 출제자만 제외
   if (cand.length === 0) cand = ids;                                       // 그래도 없으면 전원
@@ -611,7 +677,7 @@ function pickDrawer() {
 }
 // redo=true: 출제자가 나가서 같은 번호 문제를 다시 출제
 function nextQuestion(redo) {
-  if (presentIds().length < 2) { finishGame("인원이 2명보다 적어져서 게임을 마쳤어요."); return; }
+  if (playerIds().length < 2) { finishGame("참가자가 2명보다 적어져서 게임을 마쳤어요."); return; }
   if (!redo) S.q++;
   if (S.q > S.totalQ) { finishGame(); return; }
   S.qid++;
@@ -631,12 +697,12 @@ setInterval(() => {   // 방장이 0.25초마다 진행 체크
   if (!isHost || !S) return;
   const left = hostEnds - Date.now();
   const playing = ["choosing", "drawing", "result"].includes(S.phase);
-  if (playing && presentIds().length < 2) { finishGame("인원이 2명보다 적어져서 게임을 마쳤어요."); return; }
+  if (playing && playerIds().length < 2) { finishGame("참가자가 2명보다 적어져서 게임을 마쳤어요."); return; }
   if (S.phase === "choosing") {
-    if (!present[S.drawerId]) redoQuestion("출제자가 나가서 출제자를 다시 뽑아요.");
+    if (!isPlayer(S.drawerId)) redoQuestion("출제자가 나가서 출제자를 다시 뽑아요.");
     else if (left < -3000) redoQuestion("출제자가 응답이 없어 출제자를 다시 뽑아요.");
   } else if (S.phase === "drawing") {
-    if (!present[S.drawerId]) redoQuestion("출제자가 나가서 이 문제를 다시 출제해요.");
+    if (!isPlayer(S.drawerId)) redoQuestion("출제자가 나가서 이 문제를 다시 출제해요.");
     else if (left <= 0) endQuestion("timeout");
   } else if (S.phase === "result" && left <= 0) nextQuestion(false);
 }, 250);
@@ -662,11 +728,15 @@ function handle(m) {
     case "guess":   // 출제자만 정답 판정 (제시어를 아는 건 그 사람뿐)
       if (!S || S.drawerId !== myId || !myWord || myWordQid !== S.qid || S.phase !== "drawing" || m.qid !== S.qid) break;
       if (judgedQid === S.qid) break;                     // 이미 정답자가 나온 문제
+      if (m.spec || !isPlayer(m.from)) {                 // 관전자: 정답 판정 X, 정답이 들어간 말은 가리기
+        if (!norm(m.text).includes(norm(myWord))) emit({ t: "chat", from: m.from, name: m.name, text: m.text, spec: true });
+        break;
+      }
       if (norm(m.text) === norm(myWord)) { judgedQid = S.qid; emit({ t: "correct", from: m.from, qid: S.qid, word: myWord }); }
       else if (!norm(m.text).includes(norm(myWord))) emit({ t: "chat", from: m.from, name: m.name, text: m.text });
       break;
     case "correct":   // 방장이 첫 정답자 1명만 인정 → 점수 반영 → 즉시 문제 종료
-      if (isHost && S.phase === "drawing" && m.qid === S.qid && !S.winner && present[m.from]) {
+      if (isHost && S.phase === "drawing" && m.qid === S.qid && !S.winner && isPlayer(m.from)) {
         const frac = Math.max(0, hostEnds - Date.now()) / (S.drawTime * 1000);
         S.winner = m.from; S.word = m.word; markUsed(m.word);
         S.pts = 50 + Math.round(50 * frac); S.drawerPts = 20;
@@ -679,7 +749,7 @@ function handle(m) {
       if (isHost && m.qid === S.qid && S.phase === "result" && !S.word) { S.word = m.word; markUsed(m.word); pushState(); }
       break;
     case "chat":
-      addChat(m.from, m.name, m.text);
+      addChat(m.from, m.name, m.text, m.spec);
       break;
     case "draw": if (S && S.phase === "drawing" && m.qid === S.qid) drawSeg(m); break;
     case "clear": if (S && m.qid === S.qid) clearBoard(); break;
@@ -730,6 +800,12 @@ $("chatForm").onsubmit = (e) => {
   e.preventDefault();
   const text = $("chatInput").value.trim(); if (!text || !S) return;
   $("chatInput").value = "";
+  if (mySpec) {   // 관전자 채팅: 그리는 중엔 출제자가 정답 섞인 말을 걸러서 대신 보내 줌
+    if (S.phase === "drawing") emit({ t: "guess", from: myId, name: myName, text, qid: S.qid, spec: true });
+    else if (S.phase === "result" && !S.word) addLine("(정답 공개 후에 채팅할 수 있어요)", "sys");
+    else emit({ t: "chat", from: myId, name: myName, text, spec: true });
+    return;
+  }
   if (S.phase === "drawing" && S.drawerId !== myId) {
     if (S.winner === myId) { addLine("(이미 맞혔어요! 이번 문제에선 더 입력할 수 없어요)", "sys"); return; }
     emit({ t: "guess", from: myId, name: myName, text, qid: S.qid });
@@ -746,7 +822,7 @@ function addLine(html, cls) {
   const d = document.createElement("div"); d.className = cls || "m"; d.innerHTML = html;
   $("log").appendChild(d); $("log").scrollTop = $("log").scrollHeight;
 }
-function addChat(id, name, text) { addLine(`<span class="n" style="color:${avColor(id)}">${esc(name)}</span>${esc(text)}`, "m"); }
+function addChat(id, name, text, spec) { addLine(`${spec ? '<span class="spectag">👀 관전</span>' : ""}<span class="n" style="color:${avColor(id)}">${esc(name)}</span>${esc(text)}`, "m"); }
 function sysMsg(t, cls) { addLine(esc(t), cls || "sys"); }
 
 // ===================== 그림판 =====================
@@ -854,10 +930,10 @@ function catChips(editable) {
 function setHTML(el, html) { if (el._h === html) return false; el._h = html; el.innerHTML = html; return true; }
 function render() {
   if (!net) return;
-  const ids = presentIds();
+  const ids = playerIds(), specs = specIds();
   const sc = (id) => (S && S.scores[id]) || 0;
   const inGame = S && ["choosing", "drawing", "result"].includes(S.phase);
-  const hostId = ids[0];
+  const hostId = hostOrder()[0];
 
   // 플레이어 목록
   const sorted = [...ids].sort((a, b) => sc(b) - sc(a) || present[a].joinedAt - present[b].joinedAt);
@@ -872,6 +948,9 @@ function render() {
       id === hostId ? '<span class="tag t-host">👑 방장</span>' : "", id === myId ? '<span class="tag">나</span>' : ""].join("");
     return `<li class="${cls}" data-id="${id}">${rankHtml}${avatar(id, present[id].name)}<div class="pinfo"><div class="pname">${esc(present[id].name)}</div><div class="tags">${tags}</div></div><span class="pscore">${sc(id)}</span></li>`;
   }).join(""));
+
+  // 관전자 목록
+  setHTML($("specList"), specs.length ? `<div class="st">👀 관전 중 ${specs.length}명</div>${specs.map((id) => `<span class="sp">${avatar(id, present[id].name)}${esc(present[id].name)}${id === myId ? " (나)" : ""}${id === hostId ? " 👑" : ""}</span>`).join("")}` : "");
 
   const ov = $("overlay");
   if (!S) { setHTML(ov, '<div class="bigicon">⏳</div><h2>연결 중...</h2>'); ov.classList.remove("hidden"); return; }
@@ -903,7 +982,9 @@ function render() {
 
   $("tools").classList.toggle("hidden", !canDraw());
   cv.classList.toggle("can", canDraw());
-  $("chatHint").textContent = S.phase === "drawing" ? (amDrawer ? "출제자는 정답 단어가 들어간 말을 보낼 수 없어요" : "가장 먼저 맞힌 1명이 점수를 가져가요!") : "";
+  $("chatInput").placeholder = mySpec ? "채팅 입력 (관전 중)" : "정답이나 채팅 입력";
+  if (mySpec) $("chatHint").textContent = "👀 관전 중 · 채팅만 할 수 있어요 (정답이 들어간 말은 가려져요)";
+  else $("chatHint").textContent = S.phase === "drawing" ? (amDrawer ? "출제자는 정답 단어가 들어간 말을 보낼 수 없어요" : "가장 먼저 맞힌 1명이 점수를 가져가요!") : "";
 
   // 가운데: 대기실이면 그림판 대신 대기실 상자(내용만큼 늘어남), 아니면 그림판 + 안내
   const inLobby = S.phase === "lobby", lp = $("lobbyPanel");
@@ -914,9 +995,11 @@ function render() {
     setHTML(ov, "");
     const slots = Math.max(0, 4 - ids.length);
     const list = `<div class="lobbyplayers">${ids.map((id) => `<div class="lp">${avatar(id, present[id].name)}<span>${esc(present[id].name)}${id === hostId ? " 👑" : ""}</span></div>`).join("")}${'<div class="lp"><span class="empty">?</span><span>&nbsp;</span></div>'.repeat(slots)}</div>`;
-    const head = `<h2>🎨 대기실</h2><p class="sub">${ids.length}명 모였어요 · ${isHost ? "2명 이상이면 시작할 수 있어요" : "방장(👑)이 시작하길 기다리는 중..."}</p>`;
+    const specLine = specs.length ? `<div class="lobbyspec">👀 관전: ${specs.map((id) => esc(present[id].name)).join(", ")}</div>` : "";
+    const toggle = `<button class="togglebtn" id="specToggle">${mySpec ? "🙋 나도 참가할래요" : "👀 관전으로 바꾸기"}</button>`;
+    const head = `<h2>🎨 대기실</h2><p class="sub">참가자 ${ids.length}명${specs.length ? ` · 관전 ${specs.length}명` : ""} · ${isHost ? "참가자 2명 이상이면 시작할 수 있어요" : "방장(👑)이 시작하길 기다리는 중..."}</p>${mySpec ? '<span class="specbadge">👀 지금 관전 모드예요</span>' : ""}`;
     if (isHost) {
-      if (setHTML(lp, `${head}${list}
+      if (setHTML(lp, `${head}${list}${specLine}${toggle}
         <div class="setbox">
           <div class="setrow"><span class="lbl">📝 문제 수</span><select id="setQ">${Q_OPTIONS.map((n) => `<option value="${n}" ${n === S.totalQ ? "selected" : ""}>${n}문제</option>`).join("")}</select><span class="lbl" style="margin-left:10px">⏱️ 제한 시간</span><select id="setT">${[60, 80, 100, 120].map((n) => `<option value="${n}" ${n === S.drawTime ? "selected" : ""}>${n}초</option>`).join("")}</select></div>
           <div class="setrow"><span class="lbl">📚 문제 분야</span><span style="font-size:12px;color:var(--muted);font-weight:400">눌러서 켜고 끄기 · 여러 개 가능</span></div>
@@ -933,12 +1016,13 @@ function render() {
         });
         $("startBtn").onclick = () => emit({ t: "start" });
       }
-    } else setHTML(lp, `${head}${list}
+    } else setHTML(lp, `${head}${list}${specLine}${toggle}
         <div class="setbox">
           <div class="setrow"><span class="lbl">📝 문제 수</span><span class="pill">${S.totalQ}문제</span><span class="lbl" style="margin-left:10px">⏱️ 제한 시간</span><span class="pill">${S.drawTime}초</span></div>
           <div class="setrow"><span class="lbl">📚 문제 분야</span><span style="font-size:12px;color:var(--muted);font-weight:400">방장이 정해요</span></div>
           ${catChips(false)}
         </div>`);
+    const tg = $("specToggle"); if (tg) tg.onclick = () => setSpectator(!mySpec);
   } else if (S.phase === "choosing") {
     if (amDrawer && !(myWord && myWordQid === S.qid)) {
       if (choseForQid !== S.qid) { choseForQid = S.qid; myChoices = pick3(); }
